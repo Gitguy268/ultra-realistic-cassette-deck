@@ -57,46 +57,30 @@ for (const [name, size] of [
   }
 }
 
-// The scene with its panels out of the way: finishes, themes, the 7-inch.
+// The scene with its panels out of the way: the four finishes, in focus mode.
 const session = await open({ scheme: 'dark' });
 const { page } = session;
 await play(page);
 await page.screenshot({ path: `${OUT}/playback.jpg`, ...QUALITY });
 await page.keyboard.press('f');
 await page.waitForTimeout(2400);
-for (const finishName of ['anthracite', 'black', 'walnut', 'aluminium', 'gloss', 'clear']) {
-  await page.selectOption('#plinth', finishName).catch(async () => {
-    await page.evaluate((f) => {
-      const select = document.querySelector('#plinth');
-      select.value = f;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-    }, finishName);
-  });
-  await page.waitForTimeout(700);
-  const file = finishName === 'clear' ? 'clear-finishes' : `finishes-${finishName}`;
-  await page.screenshot({ path: `${OUT}/${file}.jpg`, ...QUALITY });
-}
-await page.keyboard.press('Escape');
-await done(session);
-
-// html-1's three themes, in the light they were designed for.
-for (const [theme, finishName] of [
-  ['minimal', 'anthracite'],
-  ['wood', 'walnut'],
-  ['clear', 'clear'],
-]) {
-  const s = await open({ scheme: 'light' });
-  await s.page.evaluate((f) => {
+const setFinish = (name) =>
+  page.evaluate((f) => {
+    // Focus mode hides the topbar, so set the select by hand.
     const select = document.querySelector('#plinth');
     select.value = f;
     select.dispatchEvent(new Event('change', { bubbles: true }));
-  }, finishName);
-  await s.page.waitForTimeout(800);
-  await s.page.screenshot({ path: `${OUT}/themes-${theme}.jpg`, ...QUALITY });
-  await done(s);
+  }, name);
+for (const finishName of ['silver', 'black', 'champagne', 'walnut']) {
+  await setFinish(finishName);
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${OUT}/finishes-${finishName}.jpg`, ...QUALITY });
 }
+await setFinish('silver');
+await page.keyboard.press('Escape');
+await done(session);
 
-// Both colour schemes of the room, side by side in the docs.
+// Both colour schemes of the room.
 {
   const s = await open({ scheme: 'light' });
   await s.page.waitForTimeout(800);
@@ -108,45 +92,32 @@ for (const [theme, finishName] of [
   await done(d);
 }
 
-// The 7-inch on its adapter.
-{
-  const s = await open({ scheme: 'dark' });
-  await s.page.evaluate(() => {
-    const box = document.querySelector('#size-by-speed');
-    box.checked = true;
-    box.dispatchEvent(new Event('change', { bubbles: true }));
-    const radio = document.querySelector('input[name="speed"][value="single"]');
-    radio.click();
-  });
-  await s.page.waitForTimeout(800);
-  await s.page.screenshot({ path: `${OUT}/record-45.jpg`, ...QUALITY });
-  await done(s);
-}
-
-// Macros, through the scene-only view: the strip, the pitch wheel, the arm, the mat.
+// Macros, through the scene-only view.
 {
   const s = await openPage({ width: 1440, height: 900 });
   const shots = {
-    strip: { position: [0.13, 0.16, 0.33], target: [0.1, 0.05, 0.17], focal: 70 },
-    wheel: { position: [-0.12, 0.14, 0.3], target: [-0.13, 0.052, 0.157], focal: 70 },
-    head: { position: [0.2, 0.15, 0.2], target: [0.145, 0.09, 0.1], focal: 80 },
-    gimbal: { position: [0.26, 0.2, 0.08], target: [0.136, 0.09, -0.107], focal: 70 },
-    hinge: { position: [0.42, 0.18, -0.02], target: [0.2, 0.08, -0.17], focal: 60 },
-    rear: { position: [0.1, 0.25, -0.75], target: [0.05, 0.03, -0.17], focal: 50 },
-    grooves: { position: [-0.05, 0.22, 0.2], target: [-0.05, 0.07, 0.05], focal: 80 },
+    cassette: ['', { position: [-0.15, 0.1, 0.36], target: [-0.092, 0.07, 0.13], focal: 70 }],
+    meters: ['', { position: [0.12, 0.11, 0.38], target: [0.09, 0.085, 0.13], focal: 75 }],
+    counter: [
+      '&counter=399.6',
+      { position: [0.2, 0.11, 0.26], target: [0.18, 0.09, 0.13], focal: 90 },
+    ],
+    keys: [
+      '&keys=play',
+      { position: [-0.06, 0.07, 0.33], target: [-0.09, 0.02, 0.135], focal: 70 },
+    ],
+    switches: ['', { position: [0.16, 0.09, 0.32], target: [0.12, 0.05, 0.135], focal: 70 }],
+    door: ['&door=28', { position: [-0.22, 0.16, 0.4], target: [-0.092, 0.06, 0.12], focal: 50 }],
+    out: ['&door=28&out', { position: [0.33, 0.22, 0.42], target: [0.3, 0.0, 0.1], focal: 45 }],
   };
-  for (const [name, stop] of Object.entries(shots)) {
+  for (const [name, [extra, stop]] of Object.entries(shots)) {
     await s.page.goto(
-      `${BASE_URL}view.html?view=hero&open=78&macro=${encodeURIComponent(JSON.stringify(stop))}`,
+      `${BASE_URL}view.html?view=hero${extra}&macro=${encodeURIComponent(JSON.stringify(stop))}`,
     );
-    await s.page.waitForFunction(() => window.__world?.ready, null, { timeout: 30000 });
-    await s.page.waitForTimeout(300);
+    await s.page.waitForFunction(() => window.__world?.ready, null, { timeout: 60000 });
+    await s.page.waitForTimeout(400);
     await s.page.screenshot({ path: `${OUT}/macro-${name}.jpg`, ...QUALITY });
   }
-  await s.page.goto(`${BASE_URL}view.html?view=top&open=78&norecord`);
-  await s.page.waitForFunction(() => window.__world?.ready, null, { timeout: 30000 });
-  await s.page.waitForTimeout(300);
-  await s.page.screenshot({ path: `${OUT}/macro-mat.jpg`, ...QUALITY });
   await done(s);
 }
 

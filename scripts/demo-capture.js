@@ -1,4 +1,4 @@
-// Frames for the animated demo: the opening camera move, then Start. Usage: npm run build && npm run
+// Frames for the animated demo: the opening camera move, then Play. Usage: npm run build && npm run
 // preview, then: node scripts/demo-capture.js <out directory>; img2webp assembles them (see README).
 import { mkdirSync } from 'node:fs';
 import { BASE_URL, finish, openPage } from './lib.js';

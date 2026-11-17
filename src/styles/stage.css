@@ -212,16 +212,13 @@ body.has-stage.focus-mode .transport {
   }
 
   body.has-stage .deck .strip {
-    grid-template-columns: repeat(5, auto);
-    justify-content: center;
     gap: var(--space-1) var(--space-2);
     padding: var(--space-2);
     font-size: 0.64rem;
   }
 
   body.has-stage .deck .strip .pitch-well {
-    grid-column: 1 / -1;
-    order: 9;
+    flex-basis: 100%;
   }
 
   body.has-stage.focus-mode .deck {

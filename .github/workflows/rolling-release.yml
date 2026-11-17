@@ -4,7 +4,7 @@ name: Rolling release
 # the tag is moved to that commit and the assets are rebuilt and replaced on every push.
 on:
   workflow_run:
-    workflows: ['Deploy to GitHub Pages']
+    workflows: ["Deploy to GitHub Pages"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
@@ -18,11 +18,11 @@ concurrency:
 
 jobs:
   build:
-    name: Offline web copy
+    name: Offline web copy and the one-file build
     # Only pushes to this repo, never pull requests (a fork's branch can also be called main).
     if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     outputs:
       sha: ${{ steps.src.outputs.sha }}
     permissions:
@@ -45,20 +45,36 @@ jobs:
           gh run download "$RUN_ID" --name github-pages --dir pages
           mkdir site
           tar -xf pages/artifact.tar -C site
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.src.outputs.sha }}
+          path: src
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: The one-file build, from the same commit
+        working-directory: src
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build:single
+          mkdir -p ../out
+          cp dist-single/index.html ../out/ultra-realistic-cassette-deck.html
       - name: Package the offline copy
         run: |
           set -euo pipefail
-          pkg="pkg/ultra-realistic-vinyl-player"
+          pkg="pkg/ultra-realistic-cassette-deck"
           mkdir -p "$pkg" out
           mv site "$pkg/site"
           cat > "$pkg/serve.py" << 'PYEOF'
           #!/usr/bin/env python3
-          """Serve this app on http://127.0.0.1:PORT/ultra-realistic-vinyl-player/ and open it in your browser. Ctrl+C stops it."""
+          """Serve this app on http://127.0.0.1:PORT/ultra-realistic-cassette-deck/ and open it in your browser. Ctrl+C stops it."""
           import http.server, os, socketserver, threading, webbrowser
 
           SITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "site")
-          MOUNT = "/ultra-realistic-vinyl-player/"
-          PORT = int(os.environ.get("PORT", "29009"))
+          MOUNT = "/ultra-realistic-cassette-deck/"
+          PORT = int(os.environ.get("PORT", "34692"))
 
 
           class Handler(http.server.SimpleHTTPRequestHandler):
@@ -112,7 +128,7 @@ jobs:
 
           PYEOF
           cat > "$pkg/README.txt" << 'TXTEOF'
-          ultra-realistic-vinyl-player (offline copy)
+          ultra-realistic-cassette-deck (offline copy)
 
           Built from the latest commit by the rolling release. The app needs a local web server
           (browsers block it when index.html is opened straight from disk), so use a launcher:
@@ -121,17 +137,17 @@ jobs:
             Linux    ./start.sh
             Windows  double-click start.bat
 
-          All three run serve.py, which needs Python 3, and open http://127.0.0.1:29009/ultra-realistic-vinyl-player/ in your browser.
+          All three run serve.py, which needs Python 3, and open http://127.0.0.1:34692/ultra-realistic-cassette-deck/ in your browser.
           Close the window or press Ctrl+C to stop it.
 
-          Source, licence and issues: https://github.com/Gitguy268/ultra-realistic-vinyl-player
+          Source, licence and issues: https://github.com/Gitguy268/ultra-realistic-cassette-deck
 
           TXTEOF
           printf '#!/bin/sh\ncd "$(dirname "$0")" && exec python3 serve.py\n' > "$pkg/start.command"
           cp "$pkg/start.command" "$pkg/start.sh"
           printf '@echo off\r\ncd /d "%%~dp0"\r\npython serve.py || py serve.py\r\npause\r\n' > "$pkg/start.bat"
           chmod +x "$pkg/start.command" "$pkg/start.sh" "$pkg/serve.py"
-          (cd pkg && zip -qr -X "../out/ultra-realistic-vinyl-player-web.zip" "ultra-realistic-vinyl-player")
+          (cd pkg && zip -qr -X "../out/ultra-realistic-cassette-deck-web.zip" "ultra-realistic-cassette-deck")
           ls -l out
       - uses: actions/upload-artifact@v7
         with:
@@ -141,7 +157,7 @@ jobs:
 
   publish:
     name: Update the rolling release
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -158,13 +174,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
           SHA: ${{ needs.build.outputs.sha }}
           BRANCH: main
-          PRERELEASE: 'false'
+          PRERELEASE: "false"
         run: |
           set -euo pipefail
           mkdir -p out
           if [ -n "$(ls -A out)" ]; then (cd out && sha256sum -- * > SHA256SUMS.txt); fi
           ls -l out
-          notes="Built automatically from the latest commit on \`$BRANCH\` ([\`${SHA::7}\`](https://github.com/$GH_REPO/commit/$SHA), $(date -u '+%Y-%m-%d %H:%M UTC')). This release is replaced on every push, so it can change at any time."
+          notes="Built automatically from the latest commit on \`$BRANCH\` ([\`${SHA::7}\`](https://github.com/$GH_REPO/commit/$SHA), $(date -u '+%Y-%m-%d %H:%M UTC')). This release is replaced on every push, so it can change at any time. ultra-realistic-cassette-deck.html is the whole player in one file: download it and double-click it, no server needed."
           # Point the tag at this commit (create it the first time).
           if gh api "repos/$GH_REPO/git/ref/tags/latest" > /dev/null 2>&1; then
             gh api -X PATCH "repos/$GH_REPO/git/refs/tags/latest" -f sha="$SHA" -F force=true > /dev/null

@@ -87,9 +87,9 @@ export class World {
     this.renderer.shadowMap.autoUpdate = false;
     // Counted per frame across the scene pass and the post passes.
     this.renderer.info.autoReset = false;
-    // What shows through the smoked door is blurred by it anyway: half resolution is enough,
-    // and saves a full-size multisampled buffer.
-    this.renderer.transmissionResolutionScale = 0.5;
+    // The door's smoked window is clear glass: the label behind it must stay sharp, so the
+    // transmission pass runs at full resolution.
+    this.renderer.transmissionResolutionScale = 1;
     this.camera.filmGauge = DECK_SPEC.camera.filmGauge;
     this.surfaces = bakeSurfaces(this.renderer);
     this.materials = createDeckMaterials(this.surfaces, {
@@ -251,10 +251,10 @@ export class World {
     const size = this.renderer.getDrawingBufferSize(new Vector2());
     const pixels = size.x * size.y;
     // Scene target: 4× MSAA half-float colour + depth, resolved colour + depth texture; the
-    // transmission pass keeps one more such target at a quarter of the pixels; the bloom chain
+    // transmission pass keeps one more such target at full size; the bloom chain
     // adds a third of a frame.
     const sceneTarget = pixels * (4 * (8 + 4) + 8 + 4);
-    const targets = sceneTarget * 1.25 + pixels * 8 * (1 / 3);
+    const targets = sceneTarget * 2 + pixels * 8 * (1 / 3);
     return {
       calls: { ...this.lastCalls, total: info.render.calls },
       triangles: info.render.triangles,

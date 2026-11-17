@@ -149,6 +149,8 @@ export async function openPage({
   if (!launch) throw new Error(`Unknown BROWSER "${BROWSER}"`);
   const browser = await launch();
   const context = await browser.newContext({ viewport: { width, height }, ...contextOptions });
+  // A busy machine can take a while to compile the scene's shaders.
+  context.setDefaultNavigationTimeout(120000);
   if (!showTutorial) {
     // The first-run tutorial has its own check; keep it out of the way elsewhere.
     await context.addInitScript(() =>

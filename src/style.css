@@ -76,8 +76,10 @@ h1 {
 
 /* The transport strip: brushed aluminium with piano keys, the counter and the pitch. */
 .strip {
-  display: grid;
-  grid-template-columns: auto auto repeat(5, auto) auto auto minmax(120px, 1fr);
+  /* A row that wraps: the keys stay together and the pitch takes what room is left. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: var(--space-2) var(--space-3);
   padding: var(--space-3) var(--space-4);
@@ -161,6 +163,7 @@ h1 {
 }
 
 .pitch-well {
+  flex: 1 1 180px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -187,17 +190,13 @@ h1 {
 
 @media (max-width: 560px) {
   .strip {
-    grid-template-columns: repeat(5, auto);
-    grid-auto-flow: row;
-    justify-content: space-between;
     gap: var(--space-2);
     padding: var(--space-2);
     font-size: 0.66rem;
   }
 
   .pitch-well {
-    grid-column: 1 / -1;
-    order: 9;
+    flex-basis: 100%;
   }
 
   .plate {

@@ -26,7 +26,13 @@ await clickPart(page, 'key:pause');
 await clickPart(page, 'key:stop');
 await page.waitForTimeout(400);
 check('the Stop key stops', (await state()).mode === 'stop');
-check('…and Play comes back up', Math.abs((await keyZ('play')) - restZ) < 0.0003);
+check(
+  '…and Play comes back up',
+  await until(
+    (z) => Math.abs(window.__deck.stage.world.deck.keys.play.position.z - z) < 0.0003,
+    restZ,
+  ),
+);
 await clickPart(page, 'key:rec');
 check(
   'Record says this deck only plays',
@@ -98,10 +104,9 @@ check(
   'a click on the cassette in the open door takes it out',
   await until(() => !window.__deck.state().inDeck),
 );
-await page.waitForTimeout(300);
 check(
   '…onto the credenza',
-  await page.evaluate(() => window.__deck.stage.world.deck.cassette.parent.name === 'tableSpot'),
+  await until(() => window.__deck.stage.world.deck.cassette.parent.name === 'tableSpot'),
 );
 await page.keyboard.press('Escape');
 await page.waitForTimeout(2300);

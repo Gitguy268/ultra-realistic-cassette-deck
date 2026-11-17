@@ -76,7 +76,7 @@ function tune(seconds: number, bpm: number, root: number, seed: string): ArrayBu
 }
 
 export const DEMO_ARTIST = 'Synth Demo';
-export const DEMO_ALBUM = 'Test Pressing';
+export const DEMO_ALBUM = 'Test Tape';
 
 export function demoFiles(): File[] {
   const specs = [

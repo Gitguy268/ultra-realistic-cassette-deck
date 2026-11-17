@@ -187,9 +187,14 @@ bindMediaSession({
   seekTo: (seconds) => deck.seek(seconds),
   seekBy: (seconds) => deck.seek(Math.max(0, Math.min(deck.duration, deck.currentTime + seconds))),
 });
+const demo = query.has('demo');
 void player.start().then(() => {
-  deck.restoreState(readStored('deck'));
+  // `?demo` plays beside the library and leaves the saved tape position alone.
+  if (!demo) deck.restoreState(readStored('deck'));
 });
+const saveDeck = (): void => {
+  if (!demo) writeStored('deck', deck.saveState());
+};
 bindUpdateToast();
 
 // ─── The transport's twins ─────────────────────────────────────────
@@ -243,11 +248,16 @@ for (const [id, direction] of [
   };
   button.addEventListener('pointerdown', (event) => {
     down = true;
-    button.setPointerCapture(event.pointerId);
     deck.windKey(direction, true);
+    try {
+      button.setPointerCapture(event.pointerId);
+    } catch {
+      // A pointer the browser no longer tracks: the key still goes down, and up on leave.
+    }
   });
   button.addEventListener('pointerup', release);
   button.addEventListener('pointercancel', release);
+  button.addEventListener('pointerleave', release);
   // A keyboard click (Enter or Space on the button): a tap, which winds or briefly cues.
   button.addEventListener('click', (event) => {
     if (event.detail !== 0) return;
@@ -790,7 +800,7 @@ function startLoop(): void {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     cancelAnimationFrame(frame);
-    writeStored('deck', deck.saveState());
+    saveDeck();
     let previous = performance.now();
     hiddenTimer = window.setInterval(() => {
       const now = performance.now();
@@ -799,10 +809,8 @@ document.addEventListener('visibilitychange', () => {
     }, HIDDEN_TICK_MS);
   } else startLoop();
 });
-addEventListener('pagehide', () => writeStored('deck', deck.saveState()));
-setInterval(() => {
-  if (!query.has('demo')) writeStored('deck', deck.saveState());
-}, SAVE_DECK_MS);
+addEventListener('pagehide', saveDeck);
+setInterval(saveDeck, SAVE_DECK_MS);
 if (
   stage &&
   !reducedMotion.matches &&

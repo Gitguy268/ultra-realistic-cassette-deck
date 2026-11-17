@@ -18,6 +18,7 @@ interface Manifest {
   name: string;
   short_name: string;
   start_url: string;
+  scope: string;
   display: string;
   theme_color: string;
   background_color: string;
@@ -39,7 +40,10 @@ describe('web app manifest', () => {
   it('has the required fields', () => {
     expect(manifest.name).toBe('Ultra-Realistic Cassette Deck');
     expect(manifest.short_name).toBe('Cassette Deck');
-    expect(manifest.start_url).toBe('/');
+    // Relative, so the same file works at / (Vercel) and under /ultra-realistic-cassette-deck/ (Pages).
+    expect(manifest.start_url).toBe('.');
+    expect(manifest.scope).toBe('.');
+    for (const icon of manifest.icons) expect(icon.src.startsWith('/')).toBe(false);
     expect(manifest.display).toBe('standalone');
   });
 
@@ -60,7 +64,7 @@ describe('web app manifest', () => {
 
   it('points every icon at a committed PNG of the declared size', () => {
     for (const icon of manifest.icons) {
-      const file = `public${icon.src}`;
+      const file = `public/${icon.src}`;
       expect(existsSync(path(file)), file).toBe(true);
       expect(icon.type).toBe('image/png');
       expect(pngSize(file)).toBe(icon.sizes);

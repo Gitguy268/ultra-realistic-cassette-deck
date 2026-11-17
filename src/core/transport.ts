@@ -205,6 +205,8 @@ export class Transport {
     const tau = this.tauFor(target);
     this.v += (target - this.v) * (1 - Math.exp(-dt / tau));
     if (Math.abs(this.v) < STILL && target === 0) this.v = 0;
+    // Settled: exactly on speed, so the sound is not resampled by a hair forever.
+    if (Math.abs(target - this.v) < Math.abs(target) * 1e-7) this.v = target;
     const before = this.x;
     this.x += this.v * dt;
     if (this.search !== null && this.mode === 'wind') {

@@ -1,3 +1,5 @@
+import { DECK_SPEC } from '../../spec/deck';
+
 /**
  * Small per-sample building blocks for the tape chain. They run inside the AudioWorklet, so they
  * allocate nothing while processing; each is tested on its own (tests/tape-dsp.test.ts).
@@ -169,6 +171,9 @@ export class SlidingBand {
 
 export type NrKind = 'off' | 'B' | 'C';
 
+const NR_B = DECK_SPEC.nr.B;
+const NR_C = DECK_SPEC.nr.C;
+
 /** B: one stage. C: a high-level stage and a low-level stage in series [S3]. */
 export class NoiseReduction {
   private stages: SlidingBand[] = [];
@@ -180,9 +185,13 @@ export class NoiseReduction {
     if (kind === this.kind) return;
     this.kind = kind;
     const sr = this.sampleRate;
-    if (kind === 'B') this.stages = [new SlidingBand(sr, 10, 1500, 0.012)];
+    // Corners and depths tuned to the published per-band reductions (tests/reference.test.ts).
+    if (kind === 'B') this.stages = [new SlidingBand(sr, NR_B.maxDb, NR_B.cornerHz, 0.012)];
     else if (kind === 'C')
-      this.stages = [new SlidingBand(sr, 10, 900, 0.05), new SlidingBand(sr, 10, 600, 0.006)];
+      this.stages = [
+        new SlidingBand(sr, NR_C.maxDb, NR_C.cornerHz * 1.5, 0.05),
+        new SlidingBand(sr, NR_C.maxDb, NR_C.cornerHz, 0.006),
+      ];
     else this.stages = [];
   }
 

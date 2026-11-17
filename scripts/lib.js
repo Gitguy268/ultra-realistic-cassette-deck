@@ -152,7 +152,7 @@ export async function openPage({
   if (!showTutorial) {
     // The first-run tutorial has its own check; keep it out of the way elsewhere.
     await context.addInitScript(() =>
-      localStorage.setItem('realistic-vinyl-player.coachDone', 'true'),
+      localStorage.setItem('ultra-cassette-deck.coachDone', 'true'),
     );
   }
   const page = await context.newPage();
@@ -177,4 +177,40 @@ export function finish(errors) {
   const failed = results.filter((result) => !result.ok).length;
   process.stdout.write(`${results.length - failed}/${results.length} checks passed\n`);
   process.exitCode = failed === 0 ? 0 : 1;
+}
+
+/**
+ * Opens the player with `?demo&debug` (or another query), the intro skipped, and waits until the
+ * demo tracks are on the tape. Adds `state()` (window.__deck.state()) and `until(fn, arg)`.
+ */
+export async function openDeck({ query = 'demo&debug', ...options } = {}) {
+  const opened = await openPage(options);
+  await opened.page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
+  await opened.page.goto(`${BASE_URL}?${query}`);
+  await opened.page.waitForFunction(() => window.__deck?.player.queue.ids.length > 0, null, {
+    timeout: 20000,
+  });
+  const state = () => opened.page.evaluate(() => window.__deck.state());
+  const until = (fn, arg, timeout = 15000) =>
+    opened.page.waitForFunction(fn, arg, { timeout }).then(
+      () => true,
+      () => false,
+    );
+  return { ...opened, state, until };
+}
+
+/** RMS level in dBFS of the last `seconds` heard, through the debug tap. */
+export async function levelDb(page, seconds = 0.5) {
+  const { samples } = await page.evaluate((s) => window.__deck.capture(s), seconds);
+  let sum = 0;
+  for (const v of samples) sum += v * v;
+  return 20 * Math.log10(Math.sqrt(sum / Math.max(1, samples.length)) + 1e-12);
+}
+
+/** Clicks the centre of a named part of the 3D deck. */
+export async function clickPart(page, name, options = {}) {
+  const at = await page.evaluate((n) => window.__deck.project(n), name);
+  if (!at) throw new Error(`no 3D part ${name}`);
+  await page.mouse.click(at[0], at[1], options);
+  return at;
 }

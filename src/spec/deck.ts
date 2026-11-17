@@ -17,7 +17,7 @@ export const TAPE_SPEED = mm(47.625);
 
 export const DECK_SPEC = {
   version: 1,
-  /** The cabinet. [D] 430 mm is the usual hi-fi component width [S6]. */
+  /** The cabinet. [D] 430 mm wide, the common width of hi-fi components of the time. */
   chassis: {
     width: mm(430),
     height: mm(118),
@@ -87,7 +87,7 @@ export const DECK_SPEC = {
     jackY: mm(30),
     jackDiameter: mm(6.35),
   },
-  /** Two needle meters behind one window. [D] Ballistics: VU, 300 ms to 99 % [S7]. */
+  /** Two needle meters behind one window. [D] Ballistics: a classic VU, 300 ms to 99 % (src/ui/vu.ts). */
   meters: {
     centreX: mm(78),
     centreY: mm(88),
@@ -98,7 +98,7 @@ export const DECK_SPEC = {
     needleLength: mm(30),
     /** Needle sweep from −20 VU to +3 VU. */
     sweepDeg: 92,
-    /** Needle: rise to 99 % in 300 ms with about 1 % overshoot [S7]. */
+    /** Needle: rise to 99 % in 300 ms. [D] */
     riseS: 0.3,
     overshoot: 0.012,
     lampKelvin: 3000,
@@ -153,9 +153,9 @@ export const DECK_SPEC = {
     width: mm(101.6),
     height: mm(63.5),
     thickness: mm(12.7),
-    /** [D] hub centres, as measured on common shells (grade B, see REFERENCE.md). */
+    /** [D] hub centres: the shell is ours; both packs must fit between them (tests/tape.test.ts). */
     hubSpacing: mm(42),
-    /** [D] hub (spool) outer radius, as measured (grade B). */
+    /** [D] hub (spool) outer radius; with the cited lengths and thicknesses a full pack is ~24 mm. */
     hubRadius: mm(11),
     /** The window between the reels in the shell. [D] */
     windowWidth: mm(64),
@@ -169,12 +169,13 @@ export const DECK_SPEC = {
   },
   /** Tape lengths and thicknesses per cassette [S1]. */
   tapes: {
+    /** [S1] 15 to 16 µm; length [M] 23 min a side × 47.625 mm/s ≈ 66 m, with the usual few minutes' spare. */
     C46: { minutes: 46, length: 69, thickness: mm(0.0155) },
     /** [S1] C60: 90 m, 15 to 16 µm. */
     C60: { minutes: 60, length: 90, thickness: mm(0.0155) },
     /** [S1] C90: 135 m, 10 to 11 µm. */
     C90: { minutes: 90, length: 135, thickness: mm(0.0105) },
-    /** [S1] C120: 6 µm; length [M] 60 min × 47.625 mm/s × 2 sides ≈ 172 m, plus leader. */
+    /** [S1] C120: 6 µm; length [M] 60 min a side × 47.625 mm/s ≈ 172 m (a side runs the whole tape). */
     C120: { minutes: 120, length: 172, thickness: mm(0.006) },
   },
   /** The transport. */
@@ -217,9 +218,9 @@ export const DECK_SPEC = {
   /** Noise reduction, from the published descriptions [S3]. */
   nr: {
     /** B: one sliding-band stage, 10 dB at 5 kHz and above. */
-    B: { stages: 1, maxDb: 10, cornerHz: 1500 },
-    /** C: two stages in series, a high-level and a low-level one, about 15–20 dB. */
-    C: { stages: 2, maxDb: 10, cornerHz: 600 },
+    B: { stages: 1, maxDb: 10.6, cornerHz: 1700 },
+    /** C: two stages in series, a high-level and a low-level one, about 15 dB A-weighted. */
+    C: { stages: 2, maxDb: 8.5, cornerHz: 700 },
   },
   /** Wow and flutter. [D] typical of a good 1980s deck: about 0.05 % WRMS. */
   wowFlutter: { wowHz: 1.1, wowDepth: 0.0006, flutterHz: 9.5, flutterDepth: 0.00035 },

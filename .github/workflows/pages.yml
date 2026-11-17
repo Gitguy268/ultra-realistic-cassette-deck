@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci || npm install
-      - run: npm run build -- --base=/ultra-realistic-vinyl-player/
+      - run: npm run build -- --base=/ultra-realistic-cassette-deck/
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v5
         with:

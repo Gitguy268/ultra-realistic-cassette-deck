@@ -92,10 +92,12 @@ export class Deck {
   version = 0;
   private queue: DeckQueue | null = null;
   private dropouts: Dropout[] = [];
-  private loadedIdx = -1;
-  private loadingIdx = -1;
+  /** The file in the engine, and the one being decoded: by file, not by queue index, which moves. */
+  private loadedFile: Blob | null = null;
+  private loadingFile: Blob | null = null;
+  private layoutKey = '';
   private heardIdx = -1;
-  private predecoded = -1;
+  private predecoded: Blob | null = null;
   private wind: WindSound | null = null;
   private tone: ToneSettings = { bass: 0, mid: 0, treble: 0 };
   private graphicEq: GraphicEq = FLAT_EQ;
@@ -149,15 +151,19 @@ export class Deck {
 
   /** Lays the queue onto cassettes again (the queue or the cassette choice changed). */
   rebuild(choice?: TapeChoice): void {
+    const durations = this.queue?.durations() ?? [];
+    const key = `${choice ?? this.program.choice}|${this.queue?.ids().join('/') ?? ''}|${durations.join('/')}`;
+    // Most queue changes (the current track, a tag, shuffle) leave the tape as it is.
+    if (key === this.layoutKey) return;
+    this.layoutKey = key;
     const before = this.program.cassettes[this.cassetteIndex]?.tape;
-    this.program.build(this.queue?.durations() ?? [], choice);
+    this.program.build(durations, choice);
     this.cassetteIndex = Math.min(this.cassetteIndex, this.program.cassettes.length - 1);
     const cassette = this.program.cassettes[this.cassetteIndex]!;
     if (cassette.tape !== before) {
       const share = this.xA / this.geometry.total;
       this.loadCassette(this.cassetteIndex, this.faceUp, share * cassette.geometry.total);
     } else this.refreshTape();
-    this.loadedIdx = -1;
     this.version++;
     this.events.emit('cassette', undefined);
   }
@@ -522,10 +528,11 @@ export class Deck {
     this.events.emit('announce', this.inDeck ? 'Cassette in.' : 'Cassette out.');
   }
 
-  /** Turns the cassette over in the hand (only while it is out of the deck). */
+  /** Turns the cassette over in the hand: only while it is out of the deck. */
   flip(): void {
-    if (this.inDeck && !this.door.closed) {
-      this.inDeck = false;
+    if (this.inDeck) {
+      this.events.emit('status', 'Take the cassette out first: eject, then Take out.');
+      return;
     }
     const x = this.xA;
     this.faceUp = (1 - this.faceUp) as 0 | 1;
@@ -543,7 +550,6 @@ export class Deck {
     this.loadCassette(index, faceUp, null);
     this.transport.x = this.physical(this.xAFor(faceUp, seconds));
     this.counterAt = this.transport.x;
-    this.loadedIdx = -1;
     this.version++;
     this.mechanism('insert');
     this.events.emit('cassette', undefined);
@@ -699,8 +705,10 @@ export class Deck {
       if (engine.isCueing) engine.endScratch();
       return;
     }
-    if (this.loadedIdx !== spot.idx) {
-      this.load(spot.idx);
+    const file = this.queue?.fileAt(spot.idx);
+    if (!file) return;
+    if (this.loadedFile !== file) {
+      this.load(spot.idx, file);
       return;
     }
     if (engine.state === 'loading' || engine.state === 'idle') return;
@@ -733,26 +741,24 @@ export class Deck {
     }
   }
 
-  private load(idx: number): void {
-    if (this.loadingIdx === idx) return;
-    const file = this.queue?.fileAt(idx);
-    if (!file) return;
-    this.loadingIdx = idx;
+  private load(idx: number, file: Blob): void {
+    if (this.loadingFile === file) return;
+    this.loadingFile = file;
     const durations = this.queue?.durations() ?? [];
     void this.engine
       .load(file, durations[idx] ?? 0)
       .then(() => {
-        if (this.loadingIdx === idx) this.loadedIdx = idx;
+        if (this.loadingFile === file) this.loadedFile = file;
       })
       .catch(() => {
         this.events.emit(
           'status',
           `This track could not be played: ${this.queue?.titleAt(idx) ?? ''}.`,
         );
-        this.loadedIdx = idx;
+        this.loadedFile = file;
       })
       .finally(() => {
-        if (this.loadingIdx === idx) this.loadingIdx = -1;
+        if (this.loadingFile === file) this.loadingFile = null;
       });
   }
 
@@ -766,12 +772,11 @@ export class Deck {
       const i = segments.findIndex((x) => x.idx === spot.idx);
       if (s && s.end - at < PREDECODE_AHEAD_S) next = segments[i + 1]?.idx ?? -1;
     }
-    if (next < 0 || next === this.predecoded || next === this.loadedIdx) return;
-    const file = this.queue?.fileAt(next);
-    if (!file) return;
-    this.predecoded = next;
-    if (spot.kind === 'blank' && this.loadingIdx < 0) {
-      this.load(next);
+    const file = next < 0 ? undefined : this.queue?.fileAt(next);
+    if (!file || file === this.predecoded || file === this.loadedFile) return;
+    this.predecoded = file;
+    if (spot.kind === 'blank' && this.loadingFile === null) {
+      this.load(next, file);
       return;
     }
     void this.engine.predecode(file, this.queue?.durations()[next] ?? 0);

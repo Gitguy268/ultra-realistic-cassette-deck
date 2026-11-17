@@ -182,13 +182,13 @@
   "nr": {
     "B": {
       "stages": 1,
-      "maxDb": 10,
-      "cornerHz": 1500
+      "maxDb": 10.6,
+      "cornerHz": 1700
     },
     "C": {
       "stages": 2,
-      "maxDb": 10,
-      "cornerHz": 600
+      "maxDb": 8.5,
+      "cornerHz": 700
     }
   },
   "wowFlutter": {

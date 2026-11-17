@@ -5,7 +5,7 @@ import { BASE_URL, check, finish, openPage } from './lib.js';
 
 const SECONDS = Number(process.env.SOAK_SECONDS ?? 600);
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?demo&debug`);
 await page.waitForFunction(() => window.__deck?.player.queue.ids.length === 3, null, {
   timeout: 15000,
@@ -28,10 +28,11 @@ const heaps = [];
 const end = Date.now() + SECONDS * 1000;
 while (Date.now() < end) {
   await page.waitForTimeout(10000);
-  // Keep the record playing: the demo tracks are short, so start again at the end of a side.
+  // Keep the tape playing: ∞ turns it round at each end, and Play again if anything stopped it.
   await page.evaluate(() => {
     const { deck } = window.__deck;
-    if (!deck.groove.contact && !deck.dropping) deck.play();
+    deck.setReverseMode('loop');
+    if (!deck.playing) deck.play();
   });
   heaps.push((await sample()).heap);
 }

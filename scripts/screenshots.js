@@ -25,7 +25,7 @@ async function open({
     hasTouch: touch,
     isMobile: touch,
   });
-  await session.page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+  await session.page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
   await session.page.goto(`${BASE_URL}${query}`);
   await session.page.waitForFunction(() => window.__deck?.player.queue.ids.length === 3, null, {
     timeout: 30000,

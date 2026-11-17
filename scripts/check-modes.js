@@ -3,7 +3,7 @@
 import { BASE_URL, check, finish, openPage } from './lib.js';
 
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 const logs = [];
 page.on('console', (message) => logs.push(message.text()));
 
@@ -24,8 +24,8 @@ check(
   '?demo leaves the saved order alone',
   await page.evaluate(
     () =>
-      !localStorage.getItem('vinyl-tracks') &&
-      !localStorage.getItem('realistic-vinyl-player.queue'),
+      !localStorage.getItem('ultra-cassette-deck.queue') &&
+      !localStorage.getItem('ultra-cassette-deck.deck'),
   ),
 );
 
@@ -33,7 +33,7 @@ await page.click('#play');
 await page.waitForFunction(() => window.__deck.deck.engine.playing, null, { timeout: 15000 });
 await page.waitForTimeout(800);
 const captured = await page.evaluate(async () => {
-  const { samples, sr } = await window.__deck.Debug.capture(0.5);
+  const { samples, sr } = await window.__deck.capture(0.5);
   let sum = 0;
   for (const v of samples) sum += v * v;
   return { n: samples.length, sr, rms: Math.sqrt(sum / samples.length) };

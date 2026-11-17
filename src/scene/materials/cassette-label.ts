@@ -46,6 +46,13 @@ export class CassetteLabel {
   private readonly print = document.createElement('canvas');
   private key = '';
   private live = false;
+  /** What was last printed, and the live picture last shown (for the browser checks). */
+  content: LabelContent | null = null;
+  source: HTMLCanvasElement | null = null;
+
+  get isLive(): boolean {
+    return this.live;
+  }
 
   constructor() {
     this.canvas.width = this.print.width = WIDTH;
@@ -72,6 +79,7 @@ export class CassetteLabel {
     ].join('§');
     if (key === this.key) return;
     this.key = key;
+    this.content = { ...content };
     this.paintPrint(content);
     this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
     this.ctx.drawImage(this.print, 0, 0);
@@ -85,6 +93,7 @@ export class CassetteLabel {
     g.clearRect(0, 0, WIDTH, HEIGHT);
     g.drawImage(this.print, 0, 0);
     this.live = source !== null;
+    this.source = source;
     if (source) {
       g.save();
       g.beginPath();

@@ -11,17 +11,18 @@ await page.addInitScript(() => {
 });
 await page.goto(`${BASE_URL}?debug`);
 await page.waitForFunction(() => window.__deck);
+const state = () => page.evaluate(() => window.__deck.state());
 check('no 3D stage is built', await page.evaluate(() => window.__deck.stage === null));
 check(
   'the page knows it has no stage',
   await page.evaluate(() => !document.body.classList.contains('has-stage')),
 );
 check('the scene canvas is hidden', await page.isHidden('#scene'));
-check('the 2D deck shows', await page.isVisible('#platter'));
+check('the 2D deck shows', await page.isVisible('#deck2d'));
 
 const painted = () =>
   page.evaluate(() => {
-    const c = document.querySelector('#platter');
+    const c = document.querySelector('#deck2d');
     const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
     let lit = 0;
     for (let i = 3; i < data.length; i += 4 * 97) if (data[i] > 0) lit++;
@@ -29,24 +30,34 @@ const painted = () =>
   });
 check(`the 2D deck is drawn (${await painted()} samples)`, (await painted()) > 100);
 
-await page.setInputFiles('#file', wavFile('Flat Tone.wav', 8, 440));
-await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Ready'));
+await page.setInputFiles('#file', wavFile('Flat Tone.wav', 20, 440));
+await page.waitForFunction(() => window.__deck.player.queue.ids.length === 1);
 await page.click('#play');
 await page.waitForFunction(() => window.__deck.deck.engine.playing, null, { timeout: 15000 });
 check('Play plays', true);
-const t0 = await page.evaluate(() => window.__deck.deck.engine.currentTime);
+const x0 = (await state()).x;
 await page.waitForTimeout(800);
-check('time advances', (await page.evaluate(() => window.__deck.deck.engine.currentTime)) > t0);
-await page.click('#lever');
-await page.waitForFunction(() => !window.__deck.deck.groove.contact);
-check('the cue lever lifts the needle', true);
-await page.click('#motor');
-check('the motor switches off', !(await page.evaluate(() => window.__deck.deck.plates.motorOn)));
-await page.check('input[name="speed"][value="single"]');
-check('the speed follows', await page.evaluate(() => window.__deck.deck.motor.preset === 'single'));
+check('the tape moves', (await state()).x > x0);
+await page.click('#pause');
+await page.waitForTimeout(300);
+check('Pause pauses', (await state()).paused);
+await page.click('#stop');
+await page.click('#stop');
+await page.waitForFunction(() => window.__deck.state().door > 25);
+check('Stop twice ejects', true);
+await page.click('#deck2d', { position: { x: 160, y: 60 } });
+await page.waitForTimeout(200);
+check('a click in the open door takes the cassette out', !(await state()).inDeck);
+await page.click('#turn-over');
+await page.waitForFunction(
+  () => window.__deck.state().inDeck && window.__deck.state().door === 0,
+  null,
+  { timeout: 10000 },
+);
+check('Turn over puts it back the other way round', (await state()).faceUp === 1);
 await page.fill('#pitch', '3');
 await page.dispatchEvent('#pitch', 'input');
-check('the pitch follows', await page.evaluate(() => window.__deck.deck.motor.pitch > 0.02));
+check('the pitch follows', (await state()).pitch > 0.02);
 
 finish(errors);
 await browser.close();

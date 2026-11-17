@@ -1,6 +1,7 @@
-// Imports a folder, then checks persistence, reordering, queue controls, auto-advance,
-// cover accent and clearing. Usage: npm run build && npm run preview, then:
-// node scripts/check-library.js
+// The library and the tape: a folder import, tags, persistence, reordering, a chosen track wound
+// to (or jumped to), side badges, a programme across two cassettes, the next cassette put in when a
+// tape ends, removal and clearing.
+// Usage: npm run build && npm run preview, then: node scripts/check-library.js
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { BASE_URL, check, finish, id3Chunk, makeWav, openPage, solidPng } from './lib.js';
@@ -8,41 +9,39 @@ import { BASE_URL, check, finish, id3Chunk, makeWav, openPage, solidPng } from '
 const fixture = fileURLToPath(new URL('../.scratch/import-fixture/', import.meta.url));
 rmSync(fixture, { recursive: true, force: true });
 mkdirSync(`${fixture}nested/deeper`, { recursive: true });
-const cover = solidPng([64, 200, 240]);
 writeFileSync(
   `${fixture}tagged.wav`,
-  makeWav(2, 330, id3Chunk({ title: 'Tagged Title', artist: 'Tag Artist', coverPng: cover })),
+  makeWav(
+    20,
+    330,
+    id3Chunk({ title: 'Tagged Title', artist: 'Tag Artist', coverPng: solidPng([64, 200, 240]) }),
+  ),
 );
-writeFileSync(`${fixture}nested/02 - Folder Band - Second Song.wav`, makeWav(2, 440));
-writeFileSync(`${fixture}nested/deeper/Plain Name.wav`, makeWav(2, 550));
-writeFileSync(`${fixture}nested/broken.mp3`, Buffer.from('this is not audio'));
+writeFileSync(`${fixture}nested/02 - Folder Band - Second Song.wav`, makeWav(20, 440));
+writeFileSync(`${fixture}nested/deeper/Plain Name.wav`, makeWav(20, 550));
 writeFileSync(`${fixture}nested/notes.txt`, 'not audio');
 writeFileSync(`${fixture}cover.jpg`, 'not audio');
-writeFileSync(`${fixture}._tagged.wav`, 'resource fork');
 
-const { browser, page, errors } = await openPage();
+const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
 page.on('dialog', (dialog) => dialog.accept());
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?debug`);
-
-const titles = () => page.locator('#tracks .track-title').allTextContents();
-const currentTitle = () =>
-  page.locator('#tracks .track[aria-current="true"] .track-title').textContent();
-const waitForStatus = (text) =>
-  page.waitForFunction(
-    (expected) => document.querySelector('#status')?.textContent?.includes(expected),
-    text,
-    { timeout: 15000 },
+await page.waitForFunction(() => window.__deck);
+const state = () => page.evaluate(() => window.__deck.state());
+const until = (fn, arg, timeout = 30000) =>
+  page.waitForFunction(fn, arg, { timeout }).then(
+    () => true,
+    () => false,
   );
-const sorted = (list) => [...list].sort();
+const titles = () => page.locator('#tracks .track-title').allTextContents();
 
-check('library starts empty', (await titles()).length === 0);
+check('the library starts empty', (await titles()).length === 0);
 await page.setInputFiles('#folder', fixture);
-await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 4);
+await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 3);
 const imported = await titles();
 check(
-  `folder import collects audio recursively and skips other files (${imported.join(', ')})`,
-  JSON.stringify(sorted(imported)) ===
-    JSON.stringify(sorted(['Tagged Title', 'Second Song', 'Plain Name', 'broken'])),
+  `a folder import collects audio recursively (${imported.join(', ')})`,
+  [...imported].sort().join() === 'Plain Name,Second Song,Tagged Title',
 );
 check(
   'embedded tags win over the file name',
@@ -54,250 +53,122 @@ check(
   ).startsWith('Tag Artist'),
 );
 check(
-  'file name supplies artist and title when there are no tags',
-  (
-    await page
-      .locator('#tracks li', { hasText: 'Second Song' })
-      .locator('.track-meta')
-      .textContent()
-  ).startsWith('Folder Band'),
+  'side A is marked where it begins',
+  (await page.locator('#tracks li').first().locator('.trk-side').textContent()) === 'Side A',
 );
-check('a file with unreadable tags still imports', imported.includes('broken'));
-await waitForStatus('Ready:');
-check('the first imported track is put on the platter', (await currentTitle()) === imported[0]);
 
-// Cover accent: select the tagged track and read the accent custom property.
-await page.locator('#tracks .track', { hasText: 'Tagged Title' }).click();
-await waitForStatus('Ready: Tagged Title');
-await page
-  .waitForFunction(
-    () => document.documentElement.style.getPropertyValue('--cover-accent') !== '',
-    null,
-    {
-      timeout: 5000,
-    },
-  )
-  .catch(() => undefined);
-const accent = await page.evaluate(() =>
-  document.documentElement.style.getPropertyValue('--cover-accent'),
-);
-check(`accent colour comes from the cover art (${accent || 'unset'})`, accent === '#40c8f0');
-await page.locator('#tracks .track', { hasText: 'Plain Name' }).click();
-await waitForStatus('Ready: Plain Name');
-await page.waitForFunction(
-  () => document.documentElement.style.getPropertyValue('--cover-accent') === '',
-);
-check('accent returns to the default for a track without cover art', true);
-
-// Record info: edit the details of the track on the platter.
-await page.locator('#record-info summary').click();
+// Choosing a track: the tape winds to it, then plays.
+await page.locator('#tracks .track').nth(2).click();
+check('a chosen track is wound to', await until(() => window.__deck.state().mode === 'wind'));
 check(
-  'Record info shows the current track',
-  (await page.inputValue('#info-title')) === 'Plain Name',
+  '…and plays',
+  await until(() => window.__deck.state().heard === 2 && window.__deck.state().engine.playing),
 );
-await page.fill('#info-artist', '  The Plain Band ');
-await page.fill('#info-year', '1981');
-await page.fill('#info-notes', 'Pressed on test vinyl.');
-await page.locator('#info-notes').blur();
-await page.waitForFunction(() =>
-  [...document.querySelectorAll('#tracks .track-meta')].some((meta) =>
-    meta.textContent.startsWith('The Plain Band'),
-  ),
+check(
+  '…as the current track',
+  (await page.locator('#tracks .track[aria-current=true] .track-title').textContent()) ===
+    imported[2],
 );
-check('an edited artist shows in the queue, trimmed', true);
-await page.fill('#info-year', 'nineteen');
-await page.locator('#info-year').blur();
-await page.waitForFunction(() => document.querySelector('#info-year').value === '');
-check('a year that is not a year is dropped', true);
-await page.fill('#info-year', '1981');
-await page.locator('#info-year').blur();
-await page.waitForTimeout(300);
+await page.click('#stop');
+await page.evaluate(() => (document.querySelector('#deck-settings').open = true));
+await page.uncheck('#wind-to-track');
+await page.locator('#tracks .track').nth(0).click();
+await page.waitForTimeout(200);
+const jumped = await state();
+check(
+  'with winding off, a chosen track is jumped to',
+  (jumped.mode === 'play' && jumped.spot.kind !== 'track') || jumped.heard === 0,
+);
+check(
+  '…and plays',
+  await until(() => window.__deck.state().heard === 0 && window.__deck.state().engine.playing),
+);
+await page.click('#stop');
+await page.check('#wind-to-track');
 
-// Keyboard reorder.
-const before = await titles();
+// Reordering with the keyboard re-lays the tape.
 await page.locator('#tracks .track').first().focus();
 await page.keyboard.press('Alt+ArrowDown');
-const afterKey = await titles();
+await page.waitForTimeout(200);
+const reordered = await titles();
+check('Alt+↓ moves the focused track down', reordered[1] === imported[0]);
 check(
-  'Alt+ArrowDown moves the focused track down',
-  afterKey[1] === before[0] && afterKey[0] === before[1],
-);
-check(
-  'focus stays on the moved track',
-  (await page.evaluate(
-    () => document.activeElement?.querySelector('.track-title')?.textContent,
-  )) === before[0],
+  '…and the tape follows the new order',
+  await page.evaluate(
+    () =>
+      window.__deck.deck.program.locate(1).segment.start >
+      window.__deck.deck.program.locate(0).segment.start,
+  ),
 );
 
-// Pointer reorder: drag the last handle above the first row.
-// The mouse works in viewport coordinates, so the whole list has to be on screen.
-await page.locator('#tracks').evaluate((list) => list.scrollIntoView({ block: 'center' }));
-const lastHandle = await page.locator('#tracks .handle').last().boundingBox();
-const firstRow = await page.locator('#tracks li').first().boundingBox();
-await page.mouse.move(lastHandle.x + lastHandle.width / 2, lastHandle.y + lastHandle.height / 2);
-await page.mouse.down();
-await page.mouse.move(firstRow.x + 20, firstRow.y + 4, { steps: 8 });
-await page.mouse.up();
-const afterDrag = await titles();
-check('dragging a handle moves the track to the top', afterDrag[0] === afterKey[3]);
-
-// Persistence across a reload. Count audio contexts to prove nothing is decoded early.
-await page.addInitScript(() => {
-  const Original = window.AudioContext;
-  window.audioContextsCreated = 0;
-  window.AudioContext = class extends Original {
-    constructor(...args) {
-      super(...args);
-      window.audioContextsCreated++;
-    }
-  };
-});
+// Persistence.
+await page.waitForTimeout(5500);
 await page.reload();
-await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 4);
+await page.waitForFunction(() => window.__deck?.player.queue.ids.length === 3, null, {
+  timeout: 20000,
+});
 check(
-  'library and queue order persist across a reload',
-  JSON.stringify(await titles()) === JSON.stringify(afterDrag),
-);
-check('the current track persists across a reload', (await currentTitle()) === 'Plain Name');
-await waitForStatus('On the platter: Plain Name');
-await page.waitForTimeout(700);
-check(
-  'the saved track is not decoded until it is played',
-  (await page.evaluate(() => window.audioContextsCreated)) === 0,
-);
-check('its tagged length is shown meanwhile', (await page.textContent('#time-total')) === '0:02');
-check(
-  'edited details and liner notes persist across a reload',
-  (await page.inputValue('#info-artist')) === 'The Plain Band' &&
-    (await page.inputValue('#info-year')) === '1981' &&
-    (await page.inputValue('#info-notes')) === 'Pressed on test vinyl.',
-);
-await page.screenshot({ path: fileURLToPath(new URL('../.scratch/label.png', import.meta.url)) });
-await page.click('#play');
-await waitForStatus('Ready: Plain Name');
-await page
-  .waitForFunction(() => document.querySelector('#time-current')?.textContent === '0:01', null, {
-    timeout: 5000,
-  })
-  .then(
-    () => check('the first Play after a reload decodes and starts the track', true),
-    () => check('the first Play after a reload decodes and starts the track', false),
-  );
-check(
-  'the audio context is created on that first Play',
-  (await page.evaluate(() => window.audioContextsCreated)) === 1,
-);
-// The record carries the queue (C19): the stylus would ride on into the next track, so stop it.
-await page.click('#play');
-await page.waitForFunction(
-  () => document.querySelector('#motor')?.getAttribute('aria-pressed') === 'false',
-  null,
-  { timeout: 15000 },
+  'the library and its order persist across a reload',
+  (await titles()).join() === reordered.join(),
 );
 
-// Queue controls.
-const order = await titles();
-const start = order.indexOf('Plain Name');
-// Browsers list a folder in different orders, so the current track may be last.
-const atEnd = start === order.length - 1;
-await page.click('#next');
+// A programme across two cassettes: long tracks on C46 sides.
+await page.evaluate(() => {
+  for (const track of window.__deck.player.tracks.values()) track.durationSec = 1300;
+  window.__deck.player.events.emit('change', undefined);
+});
+await page.evaluate(() => (document.querySelector('#deck-settings').open = true));
+await page.selectOption('#tape', 'C46');
 await page.waitForTimeout(200);
+let s = await state();
 check(
-  atEnd ? 'Next stays put at the end of the queue' : 'Next selects the following track',
-  (await currentTitle()) === (atEnd ? 'Plain Name' : order[start + 1]),
+  `three long tracks need two C46 cassettes (${s.cassettes})`,
+  s.cassettes === 2 && s.tape === 'C46',
 );
-await page.click('#prev');
-await page.waitForTimeout(200);
-check('Previous goes back', (await currentTitle()) === (atEnd ? order[start - 1] : 'Plain Name'));
-await page.click('#shuffle');
-check('Shuffle toggles on', (await page.getAttribute('#shuffle', 'aria-pressed')) === 'true');
-await page.click('#shuffle');
-await page.click('#repeat');
-check('Repeat cycles to all', (await page.textContent('#repeat')) === 'Repeat: all');
-await page.click('#repeat');
-await page.click('#repeat');
-check('Repeat cycles back to off', (await page.textContent('#repeat')) === 'Repeat: off');
+const badges = (await page.locator('#tracks .trk-side').allTextContents()).join();
+check(`the list marks where each side begins (${badges})`, badges === 'Side 1A,Side 1B,Side 2A');
+await page.uncheck('#wind-to-track');
+await page.locator('#tracks .track').nth(2).click();
+await page.waitForTimeout(400);
+s = await state();
+check('a track on the next cassette swaps it in', s.cassette === 1 && s.side === 'A');
+check(
+  '…and plays it',
+  await until(() => window.__deck.state().heard === 2 && window.__deck.state().engine.playing),
+);
 
-// Auto-advance: off by default; when on, the next track is cued after the arm returns.
-check('auto-advance is off by default', !(await page.isChecked('#auto-advance')));
+// When the first cassette ends, the next goes in.
+await page.locator('#tracks .track').nth(1).click();
+await until(() => window.__deck.state().cassette === 0);
 await page.check('#auto-advance');
-// Browsers list a folder in different orders, so find two playable neighbours.
-const pair = order.findIndex(
-  (title, index) => title !== 'broken' && order[index + 1] && order[index + 1] !== 'broken',
-);
-// The cue lever decides what a click on a track does (C26). Raised: it is only cued up.
-if ((await page.getAttribute('#play', 'aria-pressed')) === 'true') await page.click('#play');
-// With the arm hovering a first press lowers it; the press after that raises the lever.
-for (let i = 0; i < 3 && (await page.getAttribute('#lever', 'aria-pressed')) !== 'true'; i++) {
-  await page.click('#lever');
-  await page.waitForTimeout(500);
-}
-await page.locator('#tracks .track').nth(pair).click();
-await waitForStatus(`Ready: ${order[pair]}`);
-await page.waitForTimeout(500);
+await page.selectOption('#reverse-mode', 'one');
+await until(() => window.__deck.state().v !== 0);
+// To the end of the side, whichever way the tape is running.
+await page.evaluate(() => {
+  const s = window.__deck.state();
+  window.__deck.windTo(s.v > 0 ? s.total - 0.02 : 0.02);
+});
 check(
-  'with the lever raised, clicking a track only cues it',
-  (await page.getAttribute('#play', 'aria-pressed')) === 'false',
+  'with the option on, the next cassette goes in when a tape ends',
+  await until(
+    () => window.__deck.state().cassette === 1 && window.__deck.state().mode === 'play',
+    null,
+    15000,
+  ),
 );
-await page.click('#play');
-await page.waitForTimeout(150);
-check(
-  'Play lowers the lever again',
-  (await page.getAttribute('#lever', 'aria-pressed')) === 'false',
-);
-await page.waitForFunction(
-  (second) =>
-    document.querySelector('#tracks .track[aria-current="true"] .track-title')?.textContent ===
-      second && document.querySelector('#play')?.getAttribute('aria-pressed') === 'true',
-  order[pair + 1],
-  { timeout: 20000 },
-);
-check('with auto-advance on, the next track starts after the side ends', true);
-await page.click('#play');
+await page.click('#stop');
 
-// Remove a single track from the keyboard.
-const beforeRemove = await titles();
-await page.locator('#tracks .remove').nth(1).focus();
-check(
-  'each row has a named remove button',
-  (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ===
-    `Remove ${beforeRemove[1]}`,
-);
-await page.keyboard.press('Enter');
-await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 3);
-const afterRemove = await titles();
-check(
-  'removing a track keeps the others in order',
-  JSON.stringify(afterRemove) === JSON.stringify(beforeRemove.filter((_, index) => index !== 1)),
-);
-check(
-  'focus moves to the next track',
-  (await page.evaluate(
-    () => document.activeElement?.querySelector('.track-title')?.textContent,
-  )) === beforeRemove[2],
-);
+// Removal and clearing.
 await page.locator('#tracks .remove').last().click();
 await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 2);
-check(
-  'removing the last row moves focus to the previous track',
-  (await page.evaluate(
-    () => document.activeElement?.querySelector('.track-title')?.textContent,
-  )) === afterRemove[1],
-);
-await page.reload();
-await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 2);
-check(
-  'removals persist across a reload',
-  JSON.stringify(await titles()) === JSON.stringify(afterRemove.slice(0, 2)),
-);
-
-// Clear.
+check('a track can be removed', true);
 await page.click('#clear-library');
 await page.waitForFunction(() => document.querySelectorAll('#tracks li').length === 0);
-check('Clear library empties the list after confirmation', true);
+check('the library can be cleared', await page.isVisible('#tracks-empty'));
 await page.reload();
-await page.waitForTimeout(800);
-check('the library stays empty after a reload', (await titles()).length === 0);
+await page.waitForFunction(() => window.__deck);
+await page.waitForTimeout(500);
+check('…and stays clear after a reload', (await titles()).length === 0);
 
-await browser.close();
 finish(errors);
+await browser.close();

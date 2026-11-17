@@ -7,8 +7,10 @@ const { browser, page, errors } = await openPage();
 await page.goto(`${BASE_URL}?debug`);
 await page.waitForFunction(() => window.__deck);
 
+// The EQ lives under the player family's shared key; everything else under this player's own.
+const storedEq = () => page.evaluate(() => JSON.parse(localStorage.getItem('vinyl-eq') ?? '{}'));
 const stored = () =>
-  page.evaluate(() => JSON.parse(localStorage.getItem('realistic-vinyl-player.settings') ?? '{}'));
+  page.evaluate(() => JSON.parse(localStorage.getItem('ultra-cassette-deck.settings') ?? '{}'));
 
 await page.setInputFiles('#file', [
   wavFile('Alpha - One.wav', 6, 440),
@@ -30,10 +32,10 @@ check(
 await page.selectOption('#eq-preset', { label: 'Rock' });
 check('choosing a preset switches the EQ on', await page.isChecked('#eq-on'));
 check('the Rock preset sets 60 Hz to +4.6 dB', (await page.inputValue('#eq-60')) === '4.6');
-const saved = await stored();
+const saved = await storedEq();
 check(
-  'the EQ is saved with the settings',
-  saved.graphicEq?.on === true && saved.graphicEq?.preset === 'Rock',
+  'the EQ is saved under the family’s shared key',
+  saved.on === true && saved.preset === 'Rock',
 );
 
 const header = Buffer.from('Winamp EQ library file v1.1\x1a!--', 'latin1');
@@ -63,26 +65,19 @@ await page.waitForFunction(() =>
 );
 check('a file that is not .eqf is refused with a message', true);
 
-// The label visualizers, while the needle is down.
+// The label visualizers, while the tape plays.
 await page.click('#play');
-await page.waitForFunction(
-  () => document.getElementById('play')?.getAttribute('aria-pressed') === 'true',
-);
-/**
- * A fingerprint and colour count of the label's middle: the 3D record's label texture, or the
- * 2D deck's canvas without WebGL (PARITY.md §7).
- */
+await page.waitForFunction(() => window.__deck.state().engine.playing, null, { timeout: 15000 });
+/** A fingerprint and colour count of the label's title band, where a visualizer is printed. */
 const label = () =>
   page.evaluate(() => {
-    const canvas = window.__deck.stage?.label.canvas ?? document.getElementById('platter');
+    const canvas = window.__deck.stage.labels[window.__deck.deck.faceUp].canvas;
     const ctx = canvas.getContext('2d');
-    // The 3D label texture is the label alone: sample most of it. The 2D canvas is the whole deck.
-    const size = Math.round(canvas.width * (window.__deck.stage ? 0.6 : 0.16));
     const data = ctx.getImageData(
-      Math.round(canvas.width / 2 - size / 2),
-      Math.round(canvas.height / 2 - size / 2),
-      size,
-      size,
+      Math.round(canvas.width * 0.2),
+      Math.round(canvas.height * 0.12),
+      Math.round(canvas.width * 0.6),
+      Math.round(canvas.height * 0.27),
     ).data;
     const colours = new Set();
     let sum = 0;
@@ -106,7 +101,7 @@ for (const style of ['lines', 'scope', 'spectrogram', 'radial']) {
 }
 check('the visualizer choice is saved', (await stored()).visualizer === 'radial');
 await page.selectOption('#visualizer', 'off');
-await page.click('#play');
+await page.click('#stop');
 
 // The library desktop.
 await page.click('#desktop-toggle');
@@ -122,20 +117,21 @@ check('an album window lists its tracks as files', (await files.count()) === 2);
 const before = await page.textContent('#status');
 await files.filter({ hasText: 'Two' }).dragTo(page.locator('#desktop .desk-deck'));
 await page.waitForFunction(
-  () => document.getElementById('play')?.getAttribute('aria-pressed') === 'true',
+  () => window.__deck.state().heard === 1 && window.__deck.state().engine.playing,
+  null,
+  {
+    timeout: 30000,
+  },
 );
 check(
-  'dragging a file onto the turntable plays it',
+  'dragging a file onto the deck winds to it and plays it',
   (await page.locator('#tracks .track[aria-current=true] .track-title').textContent()) === 'Two',
 );
 check(
   'the drag is not taken for a file drop',
   (await page.locator('#tracks li').count()) === 3 && !(await page.isVisible('.drop-overlay')),
 );
-check(
-  'the status line changed only for the new record',
-  (await page.textContent('#status')) !== before,
-);
+check('the status line was left alone by the drag', (await page.textContent('#status')) === before);
 await page.keyboard.press('Escape');
 await page.keyboard.press('Escape');
 check(
@@ -148,7 +144,7 @@ check(
   'focus returns to the Desktop button',
   await page.evaluate(() => document.activeElement?.id === 'desktop-toggle'),
 );
-await page.click('#play');
+await page.click('#stop');
 
 await browser.close();
 finish(errors);

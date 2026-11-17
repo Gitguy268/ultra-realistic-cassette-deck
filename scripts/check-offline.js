@@ -23,7 +23,7 @@ const cached = await page.evaluate(async () => {
 check(`app shell is precached (${cached.length} entries)`, cached.length > 20);
 check(
   'the worklet chunk is precached',
-  cached.some((url) => /vinyl\.worklet-.*\.js/.test(url)),
+  cached.some((url) => /tape\.worklet-.*\.js/.test(url)),
 );
 check(
   'no audio is cached',
@@ -44,7 +44,7 @@ if (BROWSER === 'webkit') {
   await page.waitForTimeout(800);
   check(
     'offline reload renders the page',
-    (await page.textContent('h1')) === 'Ultra-Realistic Vinyl Player',
+    (await page.textContent('h1')) === 'Ultra-Realistic Cassette Deck',
   );
   // WebGL pixels cannot be read back after the frame, so judge a screenshot: a drawn deck has
   // far too much detail to compress like a flat colour.
@@ -58,17 +58,18 @@ if (BROWSER === 'webkit') {
         (await document.fonts.ready).check('16px "Inter Variable"'),
     ),
   );
-  await page.click('#motor');
+  await page.click('#power');
   // The button state is synced once per animation frame, so wait for it.
-  const motorOn = await page
+  const powerOff = await page
     .waitForFunction(
-      () => document.querySelector('#motor')?.getAttribute('aria-pressed') === 'true',
+      () => document.querySelector('#power')?.getAttribute('aria-pressed') === 'false',
       null,
       { timeout: 5000 },
     )
     .then(() => true)
     .catch(() => false);
-  check('controls work offline', motorOn);
+  check('controls work offline', powerOff);
+  await page.click('#power');
   await context.setOffline(false);
 }
 

@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { BASE_URL, check, finish, openPage } from './lib.js';
 
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 const requests = [];
 page.on('request', (request) => requests.push(request.url()));
 await page.goto(`${BASE_URL}?demo&debug`);

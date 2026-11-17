@@ -10,7 +10,7 @@ const out = (path) => fileURLToPath(url(`../public/${path}`));
 const jobs = [
   { template: 'icon-template.html#0.92', file: 'icons/icon-192.png', width: 192, height: 192 },
   { template: 'icon-template.html#0.92', file: 'icons/icon-512.png', width: 512, height: 512 },
-  // Maskable icons may be cropped to a circle: keep the record inside the safe zone.
+  // Maskable icons may be cropped to a circle: keep the cassette inside the safe zone.
   { template: 'icon-template.html#0.62', file: 'icons/maskable-512.png', width: 512, height: 512 },
   { template: 'og-template.html', file: 'og.png', width: 1200, height: 630 },
 ];

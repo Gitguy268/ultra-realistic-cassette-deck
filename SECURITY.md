@@ -9,7 +9,7 @@ Only the latest release on `main` is supported.
 Please do not open a public issue for a security problem.
 
 Use GitHub private vulnerability reporting: open the repository's
-[Security tab](https://github.com/Gitguy268/realistic-vinyl-player/security)
+[Security tab](https://github.com/Gitguy268/ultra-realistic-cassette-deck/security)
 and choose "Report a vulnerability". You will get a reply through that private
 advisory thread.
 

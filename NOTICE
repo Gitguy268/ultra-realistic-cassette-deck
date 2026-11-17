@@ -1,4 +1,4 @@
-Ultra-Realistic Vinyl Player
+Ultra-Realistic Cassette Deck
 Copyright (c) 2026 Lucas Van De Weerd
 Licensed under the MIT License. See LICENSE.
 
@@ -14,7 +14,7 @@ Runtime dependencies
 
 butterchurn 2.6.7 (MIT)
   WebGL implementation of the MilkDrop visualizer by Jordan Berg, used for
-  the visualizer on the record label. Loaded only when it is switched on.
+  the visualizer on the cassette's label. Loaded only when it is switched on.
   https://github.com/jberg/butterchurn
   Bundled with it, both MIT: @babel/runtime, ecma-proposal-math-extensions.
 
@@ -107,14 +107,7 @@ scripts/fixtures/tone.flac, tone.m4a, tone.aiff
   Generated sine tones used by the headless checks. Original work, MIT, same
   holder as the project. Not shipped.
 
-docs/reference/crops/, contact-sheets/, walls/
-  Small crops and contact sheets of third-party photographs of the TD 115 MK II,
-  kept as research evidence for the model (docs/reference/INDEX.csv names each
-  source). They remain the property of their owners, are not part of any build
-  and are not licensed under this project's licence. No photograph, crop or
-  traced texture is shipped.
-
-public/screenshots/
+docs/screenshots/, docs/demo.webp
   Screenshots of this application, captured for the documentation. MIT, same
   holder as the project.
 
@@ -123,23 +116,27 @@ Inspirations
 
 No code, artwork or audio was taken from any of these.
 
-RIAA playback equalisation
-  The 3180, 318 and 75 microsecond time constants are the published
-  standard for microgroove records.
+Compact Cassette playback (docs/REFERENCE.md)
+  Tape speed, shell size, tape lengths and thicknesses, the 120 and 70
+  microsecond playback equalisations, and the published behaviour of the
+  B-type and C-type noise reduction systems, from the sources listed there.
+  The noise reduction is modelled from those descriptions, not from any
+  circuit or licensed implementation.
 
-Thorens TD 115 MK II (1981 to 1984)
-  The 3D deck is a model of this turntable, built from published
-  specifications and from photographs used as reference (docs/REFERENCE.md).
-  The THORENS wordmark and "TD 115 MKII" appear on the model as they appear on
-  the real deck: the wordmark is traced as vector paths from a photograph, the
-  model lettering is set in Inter. Thorens is a trademark of its owner. This
-  project is not affiliated with or endorsed by Thorens.
+The cassette deck itself
+  The deck is generic: no real model is copied, and no maker's name, logo or
+  wordmark appears on it. The noise-reduction switch reads "NR B / C". Dolby
+  is a trademark of Dolby Laboratories; "Compact Cassette" is a trademark of
+  its owner. This project is not affiliated with or endorsed by either, or
+  by any maker of cassette decks.
 
-Realistic Vinyl Player and its single-file edition, by Lucas Van De Weerd
-  The two projects this one succeeds (same author, MIT). Their code was copied
-  and adapted: the audio engine, worklet, library, queue and controls of the
-  app, and the record model, cut-record chain, wear, tag parsers, demo tracks
-  and self-test of the single file.
+Ultra-Realistic Vinyl Player, by Lucas Van De Weerd
+  The project this one is built from (same author, MIT). Its code was copied
+  and adapted: the audio engine, the worklet's delay line and read head, the
+  library, queue, Winamp EQ, visualizers, desktop, room, lighting, camera,
+  post-processing, procedural surfaces, page chrome and the headless check
+  harness.
+  https://github.com/Gitguy268/ultra-realistic-vinyl-player
 
 henryjeff/portfolio-website
   Its technique and discipline (one continuous 3D world, a slow camera, custom
@@ -148,15 +145,9 @@ henryjeff/portfolio-website
   palette.
   https://github.com/henryjeff/portfolio-website
 
-Vinyl-Player by Lucas Van De Weerd (Gitguy268)
-  The author's earlier single-file player. Its colour palette, compact
-  controls, glow ring, tone controls, colour pickers and Record Info panel
-  were reimplemented here; no code was copied.
-  https://github.com/Gitguy268/Vinyl-Player
-
 Winampify (MIT)
   The library desktop, where artists and albums are folders and tracks are
-  files to drag onto the player, follows its idea. No code was taken.
+  files to drag onto the deck, follows its idea. No code was taken.
   https://github.com/remigallego/winampify
 
 awesome-audio-visualization (CC0)
@@ -167,7 +158,8 @@ awesome-audio-visualization (CC0)
   https://github.com/willianjusten/awesome-audio-visualization
 
 Classic VU meters
-  The 300 ms needle ballistics follow the traditional VU specification.
+  The 300 ms needle ballistics of the deck's meters follow the traditional
+  VU behaviour.
 
 Contributor Covenant 2.1 (CC BY 4.0)
   CODE_OF_CONDUCT.md is adapted from it.

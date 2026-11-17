@@ -65,46 +65,25 @@ for (const [index, file] of FILES.entries()) {
     `${file.name}: title "${title}"${file.artist ? ` and artist "${file.artist}"` : ''}`,
     title === file.title && meta.startsWith(file.artist),
   );
+  // A click on a row winds the tape to it and plays it.
   await row.locator('.track').click();
   const outcome = await page
     .waitForFunction(
-      () => /^(Ready: |Can't play )/.test(document.querySelector('#status')?.textContent ?? ''),
-      null,
-      { timeout: 15000 },
+      (i) =>
+        (window.__deck.state().heard === i && window.__deck.state().currentTime > 0.3) ||
+        /could not be played/.test(document.querySelector('#status')?.textContent ?? ''),
+      index,
+      { timeout: 60000 },
     )
     .then(() => page.textContent('#status'));
-  if (outcome.startsWith("Can't play")) {
+  if (/could not be played/.test(outcome)) {
     check(`${file.name}: not decodable here, reported cleanly`, !file.everywhere);
+    await page.evaluate(() => (document.querySelector('#status').textContent = ''));
     continue;
   }
-  // With the lever down a click on the row has already started it (C26).
-  const started = await page
-    .waitForFunction(
-      () => document.querySelector('#play')?.getAttribute('aria-pressed') === 'true',
-      null,
-      {
-        timeout: 1000,
-      },
-    )
-    .then(
-      () => true,
-      () => false,
-    );
-  if (!started) await page.click('#play');
-  const advanced = await page
-    .waitForFunction(() => document.querySelector('#time-current')?.textContent !== '0:00', null, {
-      timeout: 8000,
-    })
-    .then(
-      () => true,
-      () => false,
-    );
-  check(`${file.name}: decodes and plays`, advanced);
+  check(`${file.name}: decodes and plays`, true);
   played.push(file.name);
-  if ((await page.getAttribute('#play', 'aria-pressed')) === 'true') await page.click('#play');
-  await page.waitForFunction(
-    () => document.querySelector('#play')?.getAttribute('aria-pressed') === 'false',
-  );
+  await page.click('#stop');
 }
 const accent = await page.evaluate(async () => {
   document.querySelectorAll('#tracks .track')[2].click();

@@ -51,7 +51,7 @@ export function bindLibraryPanel(player: Player, announce: (message: string) => 
       const badge = document.createElement('span');
       badge.className = 'trk-side';
       badge.textContent = `Side ${side}`;
-      title.append(badge);
+      button.append(badge);
     }
     const remove = document.createElement('button');
     remove.type = 'button';

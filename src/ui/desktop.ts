@@ -1,6 +1,6 @@
 /**
  * The library as a desktop: artists are folders, albums are folders inside
- * them, and tracks are files to open or drag onto the turntable. The idea is
+ * them, and tracks are files to open or drag onto the deck. The idea is
  * Winampify's (https://github.com/remigallego/winampify, MIT); no code is taken from it.
  */
 import { groupLibrary, type ArtistFolder, type LibraryEntry } from '../library/group';
@@ -63,7 +63,7 @@ export function bindDesktop(options: DesktopOptions): () => void {
   const hint = document.createElement('p');
   hint.className = 'desk-hint';
   hint.textContent =
-    'Open a folder, then double-click a track or drag it onto the turntable. Esc closes.';
+    'Open a folder, then double-click a track or drag it onto the deck. Esc closes.';
   bar.append(title, hint, close);
   overlay.append(bar, icons, windows);
   overlay.setAttribute('role', 'dialog');
@@ -189,7 +189,7 @@ export function bindDesktop(options: DesktopOptions): () => void {
 
   function render(): void {
     folders = groupLibrary(options.entries());
-    const deck = icon('deck', 'Turntable', 'Drop a track to play');
+    const deck = icon('deck', 'Cassette deck', 'Drop a track to play');
     onActivate(deck, hide);
     dropTarget(deck, (id) => play(id));
     const shortcuts = [deck];

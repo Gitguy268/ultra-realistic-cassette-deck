@@ -1,10 +1,10 @@
 // Files dragged onto the page: the overlay, audio imported, an image as the page's cover. A track
-// without its own art takes that cover on its label, and keeps the default accent (C25).
+// without its own art takes that cover on the cassette's label, and keeps the default accent.
 // Usage: npm run build && npm run preview, then: node scripts/check-drop-cover.js
 import { BASE_URL, check, finish, openPage, makeWav, solidPng } from './lib.js';
 
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?debug`);
 await page.waitForFunction(() => window.__deck?.stage);
 
@@ -40,9 +40,7 @@ check('a dropped audio file is imported', true);
 const png = file('cover.png', 'image/png', solidPng([200, 40, 180], 32));
 await drag([png], ['dragover', 'drop']);
 await page.waitForFunction(
-  () =>
-    window.__deck.stage.label.last.cover !== null ||
-    window.__deck.player.coverOf(window.__deck.player.current) !== undefined,
+  () => window.__deck.player.coverOf(window.__deck.player.current) !== undefined,
   null,
   { timeout: 5000 },
 );
@@ -53,10 +51,16 @@ check(
   'it adds no track',
   await page.evaluate(() => document.querySelectorAll('#tracks li').length === 1),
 );
-await page.waitForTimeout(500);
 check(
-  'the label shows it',
-  await page.evaluate(() => window.__deck.stage.label.last.coverVersion > 0),
+  'the cassette label shows it',
+  await page
+    .waitForFunction(() => window.__deck.stage.labels[0].content?.cover !== null, null, {
+      timeout: 5000,
+    })
+    .then(
+      () => true,
+      () => false,
+    ),
 );
 check(
   'a track without its own art keeps the default accent',

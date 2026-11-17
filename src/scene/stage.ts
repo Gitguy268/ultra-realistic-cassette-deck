@@ -294,6 +294,8 @@ export class Stage {
     const hits = this.raycaster.intersectObject(this.world.deck.root, true);
     for (const h of hits) {
       if (!h.object.visible) continue;
+      // With the door open, a hand reaches past its window to the cassette behind.
+      if (h.object.name === 'doorWindow' && !this.deck.door.closed) continue;
       const kind = this.kindOf(h.object);
       // The cassette in the shut door is seen through the window: a click there is the door's.
       if (kind === 'cassette' && this.deck.inDeck && this.deck.door.closed)

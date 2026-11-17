@@ -7,9 +7,10 @@ const PORT = 4194;
 const BASE_URL = `http://localhost:${PORT}/`;
 // check-offline rewrites dist/sw.js to simulate a deploy, so it goes last.
 const CHECKS = [
-  'audio',
+  'tape',
   'formats',
-  'deck',
+  'transport',
+  'reverse',
   'parts',
   'sfx',
   'modes',
@@ -18,7 +19,6 @@ const CHECKS = [
   'context-loss',
   'network',
   'reduced',
-  'details',
   'label',
   'drop-cover',
   'finishes',
@@ -33,8 +33,10 @@ const CHECKS = [
 ];
 
 function build() {
-  const result = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', shell: true });
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  for (const script of ['build', 'build:single']) {
+    const result = spawnSync('npm', ['run', script], { stdio: 'inherit', shell: true });
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
 }
 
 async function waitForServer() {

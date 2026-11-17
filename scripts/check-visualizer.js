@@ -1,10 +1,10 @@
-// The label visualizer: the ♫ twin steps through the styles, each draws on the label while a record
-// plays, nothing is drawn with the needle up, and the choice is saved.
+// The label visualizer: the ♫ twin steps through the styles, each draws on the cassette's label while
+// the tape plays, nothing is drawn while it is stopped, and the choice is saved.
 // Usage: npm run build && npm run preview, then: node scripts/check-visualizer.js
 import { BASE_URL, check, finish, openPage } from './lib.js';
 
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?demo&debug`);
 await page.waitForFunction(() => window.__deck?.player.queue.ids.length === 3, null, {
   timeout: 15000,
@@ -18,7 +18,7 @@ check(
 );
 await page.click('#viz-step');
 check('the ♫ button steps to the next style', (await value()) === modes[1]);
-check('with the needle up the label stays printed', (await live()) === null);
+check('with the tape stopped the label stays written', (await live()) === null);
 await page.click('#play');
 await page.waitForFunction(() => window.__deck.deck.engine.playing, null, { timeout: 15000 });
 for (const mode of modes.slice(1)) {
@@ -36,7 +36,7 @@ for (const mode of modes.slice(1)) {
 await page.click('#viz-step');
 check('the button comes round to off', (await value()) === 'off');
 await page.waitForTimeout(200);
-check('off gives the printed label back', (await live()) === null);
+check('off gives the written label back', (await live()) === null);
 await page.selectOption('#visualizer', 'radial');
 await page.dispatchEvent('#visualizer', 'change');
 await page.waitForTimeout(100);

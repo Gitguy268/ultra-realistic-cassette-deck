@@ -1,4 +1,4 @@
-// A phone: nothing wider than the screen, the deck in view, the cue and transport reachable by touch.
+// A phone: nothing wider than the screen, the deck in view, the transport reachable by touch.
 // Usage: npm run build && npm run preview, then: node scripts/check-mobile.js
 import { BASE_URL, check, finish, openPage } from './lib.js';
 
@@ -9,7 +9,7 @@ const { browser, page, errors } = await openPage({
   isMobile: true,
   deviceScaleFactor: 2,
 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?demo&debug`);
 await page.waitForFunction(() => window.__deck?.player.queue.ids.length === 3, null, {
   timeout: 20000,
@@ -27,18 +27,18 @@ check(
   'the page does not scroll sideways',
   await page.evaluate(() => document.documentElement.scrollWidth <= 390),
 );
-const [sx, sy] = await page.evaluate(() => window.__deck.project('spindleBase'));
+const [sx, sy] = await page.evaluate(() => window.__deck.project('cassette'));
 check(
-  `the record is in view (${Math.round(sx)}, ${Math.round(sy)})`,
+  `the cassette is in view (${Math.round(sx)}, ${Math.round(sy)})`,
   sx > 0 && sx < 390 && sy > 0 && sy < 844,
 );
-check('the Lift button is there to press', await page.isVisible('#lever'));
+check('the Pause key is there to press', await page.isVisible('#pause'));
 await page.tap('#play');
 await page.waitForFunction(() => window.__deck.deck.engine.playing, null, { timeout: 20000 });
-check('tapping Start plays', true);
-await page.tap('#lever');
-await page.waitForFunction(() => !window.__deck.deck.groove.contact);
-check('tapping Lift lifts the needle', true);
+check('tapping Play plays', true);
+await page.tap('#pause');
+await page.waitForFunction(() => window.__deck.state().paused);
+check('tapping Pause pauses', true);
 check(
   'a touch device routes through the media element',
   await page.evaluate(() => window.__deck.deck.engine.currentRoute === 'sink'),

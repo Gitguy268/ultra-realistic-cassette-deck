@@ -4,13 +4,13 @@
       "pattern": "^http://localhost"
     },
     {
-      "pattern": "^https://gitguy268-realistic-vinyl-player\\.vercel\\.app"
+      "pattern": "^https://gitguy268-ultra-realistic-cassette-deck\\.vercel\\.app"
     },
     {
-      "pattern": "^https://github\\.com/Gitguy268/realistic-vinyl-player"
+      "pattern": "^https://gitguy268\\.github\\.io/ultra-realistic-cassette-deck"
     },
     {
-      "pattern": "^https://github\\.com/Gitguy268/ultra-realistic-vinyl-player-html"
+      "pattern": "^https://github\\.com/Gitguy268/ultra-realistic-cassette-deck/releases"
     }
   ],
   "retryOn429": true,

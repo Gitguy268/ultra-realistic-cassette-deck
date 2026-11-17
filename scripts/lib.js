@@ -208,8 +208,8 @@ export async function levelDb(page, seconds = 0.5) {
 }
 
 /** Clicks the centre of a named part of the 3D deck. */
-export async function clickPart(page, name, options = {}) {
-  const at = await page.evaluate((n) => window.__deck.project(n), name);
+export async function clickPart(page, name, options = {}, where = [0.5, 0.5, 0.5]) {
+  const at = await page.evaluate(([n, w]) => window.__deck.project(n, w), [name, where]);
   if (!at) throw new Error(`no 3D part ${name}`);
   await page.mouse.click(at[0], at[1], options);
   return at;

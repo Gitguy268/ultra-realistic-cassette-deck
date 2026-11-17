@@ -374,7 +374,11 @@ for (const element of [
 }
 hiss.addEventListener('input', applyTape);
 applyTape();
-tapeChoice.addEventListener('change', () => deck.rebuild(tapeChoice.value as TapeChoice));
+tapeChoice.addEventListener('change', () => {
+  deck.rebuild(tapeChoice.value as TapeChoice);
+  // The list's side badges follow the new layout.
+  player.events.emit('change', undefined);
+});
 deck.program.choice = tapeChoice.value as TapeChoice;
 
 function applyOptions(): void {
@@ -647,27 +651,26 @@ byId('open-tour').addEventListener('click', () => {
 });
 
 // ─── The labels: the tracks of each side written in ────────────────
-const covers = new Map<string, ImageBitmap | null>();
+/** Each side's cover, decoded once per image: a track's own art or the page's dropped cover. */
+const covers = new Map<Blob, ImageBitmap | null>();
 let coverVersion = 0;
-/** Decodes the first cover of each side once, for its label. */
+
+function sideCover(face: 0 | 1): Blob | undefined {
+  const first = deck.program.side(deck.cassetteIndex, face).segments[0];
+  const id = first ? player.queue.ids[first.idx] : undefined;
+  return id ? player.coverOf(player.tracks.get(id) ?? null) : undefined;
+}
+
 async function refreshCovers(): Promise<void> {
-  const wanted = new Set<string>();
   for (const face of [0, 1] as const) {
-    const first = deck.program.side(deck.cassetteIndex, face).segments[0];
-    const id = first ? player.queue.ids[first.idx] : undefined;
-    if (id) wanted.add(id);
-  }
-  for (const id of wanted) {
-    if (covers.has(id)) continue;
-    covers.set(id, null);
-    const track = player.tracks.get(id);
-    const blob = player.coverOf(track ?? null);
-    if (!blob) continue;
-    const bitmap = await createImageBitmap(blob).catch(() => null);
-    covers.set(id, bitmap);
+    const blob = sideCover(face);
+    if (!blob || covers.has(blob)) continue;
+    covers.set(blob, null);
+    covers.set(blob, await createImageBitmap(blob).catch(() => null));
     coverVersion++;
   }
 }
+player.events.on('track', () => void refreshCovers());
 
 const TYPE_TEXT: Record<TapeType, string> = {
   I: 'TYPE I · NORMAL',
@@ -691,7 +694,7 @@ function labelFor(face: 0 | 1): LabelContent {
     deck.program.cassettes.length > 1
       ? ` · ${deck.cassetteIndex + 1}/${deck.program.cassettes.length}`
       : '';
-  const firstId = side.segments[0] ? player.queue.ids[side.segments[0].idx] : undefined;
+  const cover = sideCover(face);
   return {
     side: deck.program.letter(face),
     heading: heading + many,
@@ -701,7 +704,7 @@ function labelFor(face: 0 | 1): LabelContent {
     nr: recordedNr.value === 'off' ? '' : `NR ${recordedNr.value}`,
     colour: labelColour,
     ink: labelInk,
-    cover: (firstId && covers.get(firstId)) || null,
+    cover: (cover && covers.get(cover)) ?? null,
     coverVersion,
   };
 }

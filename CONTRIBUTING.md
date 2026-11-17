@@ -50,70 +50,47 @@ by hand on a production build (`npm run build && npm run preview`).
 
 Fill in a row per browser you tested and paste it into the pull request.
 
-| Browser                | Scratch | Noise | Keyboard tonearm | Import | Offline | Reduced motion |
-| ---------------------- | ------- | ----- | ---------------- | ------ | ------- | -------------- |
-| Chrome (desktop)       |         |       |                  |        |         |                |
-| Edge (desktop)         |         |       |                  |        |         |                |
-| Firefox (desktop)      |         |       |                  |        |         |                |
-| Safari (desktop)       |         |       |                  |        |         |                |
-| Chrome (Android phone) |         |       |                  |        |         |                |
-| Safari (iPhone)        |         |       |                  |        |         |                |
+| Browser                | Transport | Hiss and NR | Keyboard | Import | Offline | Reduced motion |
+| ---------------------- | --------- | ----------- | -------- | ------ | ------- | -------------- |
+| Chrome (desktop)       |           |             |          |        |         |                |
+| Edge (desktop)         |           |             |          |        |         |                |
+| Firefox (desktop)      |           |             |          |        |         |                |
+| Safari (desktop)       |           |             |          |        |         |                |
+| Chrome (Android phone) |           |             |          |        |         |                |
+| Safari (iPhone)        |           |             |          |        |         |                |
 
 On phones, serve the build over HTTPS or use the deployed preview: service
 workers and AudioWorklet need a secure context.
 
-### Scratch
+### Transport
 
-1. Load a track smaller than 150 MiB and press Play.
-2. Drag the record surface (not the headshell) clockwise, then anticlockwise.
-   The pitch should follow your hand, and anticlockwise should play backward.
-3. Hold the record still: the sound should stop, with the needle still down.
-4. Let go: the record should pick up to motor speed within about a third of a
-   second, continuing from where your hand left it.
-5. Load a file larger than 150 MiB. Dragging the record should do nothing
-   except show the "Scratching is disabled" notice.
-6. On a phone, repeat steps 2 to 4 with a finger. The page must not scroll
-   while you drag on the platter.
+1. Import a few tracks and press Play: the solenoid clunks, the reels turn and
+   the counter runs; the sound starts within a tenth of a second.
+2. Hold ▶▶ during play: the music runs fast and high (cue); let go and it plays
+   on at speed. Hold ◀◀: the same backwards (review).
+3. Press Next: the head lifts, the tape winds with a whine and stops in the gap
+   before the next track, then plays.
+4. Stop, then Stop again: the door springs open on its damper. Take the cassette
+   out, turn it over, put it back and shut the door: side B faces out.
+5. Play to the end of side A (or drag the seek bar near it): the tape pulls
+   tight, the head turns, and side B plays in ⊃⊂ and ∞, but stops in ⊐.
 
-### Surface noise
+### Hiss and noise reduction
 
-1. With the needle up, no hiss or clicks should be audible at any setting.
-2. Drop the needle: hiss and occasional clicks fade in. Lift it or switch the
-   motor off: they fade out.
-3. "Surface noise" at 0 is silent; at 100 it is clearly audible but must not
-   clip.
-4. Move "Wear" from 0 to 1 and release the slider: clicks should become much
-   more frequent.
-5. Play a bass-heavy track, then silence: the noise must not sound boomy,
-   because it is mixed in after the RIAA stage.
+1. Play the gap between two tracks at a high level: the hiss is quiet with NR B
+   and louder, and brighter, with NR off.
+2. Play a track with NR off on a tape recorded with B: the treble is bright and
+   breathy. With the tape selector at I on a Type II tape: the treble is bright.
+3. Hiss at 0 is silent; at 100 it is clearly audible but never covers the music.
+4. Condition **Chewed**: dropouts in the treble and short warbles at the creases.
 
-### Sound modes and tone
+### Keyboard
 
-1. In **Flat**, a track should sound like it does in any other player, at a
-   similar level.
-2. Switch to **Warm** while it plays: clearly more bass, less treble, and much
-   quieter. Switching back must not leave a click or a stuck level.
-3. Push Bass, Mid and Treble to +12 one at a time on a loud track: the overall
-   level drops and nothing distorts. Pull them to −12: no level drop.
-4. Drop the needle in both modes: the thump should be audible but not louder
-   than the music.
-
-### Keyboard tonearm path
-
-Use the keyboard only.
-
-1. Tab to **Add files**, import a track, and wait for "Ready".
-2. Tab to **Cue lever** and press Enter. The lever shows as raised.
-3. Press the left arrow about thirty times. The arm should step across the
-   record, and a screen reader should announce "Tonearm at N percent".
-4. Press the right arrow a few times: the arm steps back outward. Stepping
-   outward past the first groove parks the arm on its rest.
-5. Step back over the record and press Enter. The needle drops and playback
-   starts at that point of the track.
-6. Press Space away from any button: the needle lifts. Press it again: it drops.
-7. Press `?`, check that Tab stays inside the dialog, and close it with Escape.
-8. Press `F`, check that only the platter and the transport bar remain, and
-   leave with Escape. Focus should return to where it was.
+1. With focus away from any field, press Space, X, `[` and `]` (held), B, N, V,
+   E, P and 0: each does what the shortcut list says.
+2. Tab through the transport strip: every key is reachable and named.
+3. Press `?`, check that Tab stays inside the dialog, and close it with Escape.
+4. Press `F`: only the deck and the transport strip remain; Escape leaves.
 
 ### Import
 
@@ -125,27 +102,27 @@ Use the keyboard only.
    it, keeping what was already imported.
 3. Drag files, and then a folder, from the file manager onto the page.
 4. Include one corrupt or mislabelled file: the import must finish, and that
-   track must show a "Could not load" message only when selected.
-5. Reload. The library, queue order, current track and platter label persist.
+   track must show a "could not be played" message only when the head reaches it.
+5. Reload. The library, queue order, current track, the tape's position and
+   the counter persist.
    The saved track is only decoded when you first play it, so the page should
-   open quickly even with a long track; Play, or dragging the arm onto the
-   record, should start it from where the needle lands.
+   open quickly even with a long track; Play starts it from where the tape
+   stopped.
 6. Select a track with cover art: the accent colour changes if it stays
    readable. Select one without: the default accent returns.
 7. Press the ✕ on one track: it leaves the queue, focus moves to the next
-   track, and it stays gone after a reload. A record on the platter keeps
-   playing.
+   track, and it stays gone after a reload. The tape is laid again without it.
 8. **Clear library**, confirm, reload: the library is empty.
-9. Change speed, pitch, volume and the other deck settings, then reload: they
+9. Change the pitch, the level and the deck's switches, then reload: they
    are restored.
 
-### Colours and record info
+### Colours and track info
 
 1. Open **Colours**, pick an accent: buttons, sliders, the label and the glow
    follow it, and the text on accent-coloured buttons stays readable.
 2. Choose a text colour close to the background: a low-contrast warning
    appears. **Reset colours** restores the theme.
-3. Open **Record info** with a track on the platter, edit the artist and the
+3. Open **Track info** with a track under the head, edit the artist and the
    notes, and tab away: the queue updates, and both survive a reload.
 4. Type in one field and move straight to the next: nothing you type may be
    overwritten.
@@ -164,9 +141,9 @@ Use the keyboard only.
 ### Reduced motion
 
 1. Turn on "Reduce motion" in the operating system settings and reload.
-2. Start a track: the platter and strobe stay parked, the tonearm still moves
+2. Start a track: no opening camera move, the reels still turn
    to follow playback, and audio is unaffected.
-3. Toggle the dust cover: it snaps instead of swinging.
+3. Eject: the door is open at once instead of gliding.
 4. The VU needles jump a few times a second instead of swinging.
 5. Turn the setting off again without reloading: motion resumes.
 
@@ -178,14 +155,13 @@ The same flows, without sound, in Chromium:
 npm run check:browser
 ```
 
-It builds, serves the build on port 4174 and runs every `scripts/check-*.js`
+It builds, serves the build on port 4194 and runs every `scripts/check-*.js`
 in turn. To run one alone, start `npm run preview` and call it with `node`.
 
-`check-audio.js` renders test signals through the built worklet offline and
-measures them (peak level, frequency response, speed deviation, reverse
-playback). It proves the signal is right, not that it sounds right.
+`check-tape.js` plays test tones through the built worklet and measures what
+comes out (peak level, hiss with and without NR, EQ and NR mismatches, wow and
+flutter, cue). It proves the signal is right, not that it sounds right.
 
-`check-loading.js` writes about 280 MB of generated audio to `.scratch/` and
-deletes it afterwards. `check-offline.js` edits `dist/sw.js` to simulate a new
+`check-loading.js` imports a 21-minute generated file to test streaming mode. `check-offline.js` edits `dist/sw.js` to simulate a new
 deploy; `check:browser` rebuilds afterwards, and you should too if you run it
 alone.

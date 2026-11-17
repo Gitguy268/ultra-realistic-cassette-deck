@@ -54,7 +54,7 @@ export function showMediaMetadata(track: Track | null): void {
     : null;
 }
 
-/** Lock screens draw their progress from this; the rate is the platter's target speed (html-1). */
+/** Lock screens draw their progress from this; the rate is the tape's speed. */
 export function showPosition(duration: number, position: number, rate: number): void {
   if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
   if (!(duration > 0) || !(rate > 0)) return;

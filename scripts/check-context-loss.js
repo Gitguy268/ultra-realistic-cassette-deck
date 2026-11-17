@@ -4,11 +4,11 @@
 import { BASE_URL, check, finish, openPage, wavFile } from './lib.js';
 
 const { browser, page, errors } = await openPage({ width: 1440, height: 900 });
-await page.addInitScript(() => sessionStorage.setItem('ultra-vinyl.intro-seen', '1'));
+await page.addInitScript(() => sessionStorage.setItem('ultra-cassette.intro-seen', '1'));
 await page.goto(`${BASE_URL}?debug`);
 await page.waitForFunction(() => window.__deck?.stage);
 await page.setInputFiles('#file', wavFile('Survivor.wav', 40, 440));
-await page.waitForFunction(() => document.querySelector('#status')?.textContent?.includes('Ready'));
+await page.waitForFunction(() => window.__deck.player.queue.ids.length > 0);
 await page.click('#play');
 await page.waitForFunction(() => window.__deck.deck.engine.playing, null, { timeout: 15000 });
 await page.waitForTimeout(500);
@@ -41,10 +41,10 @@ await page.waitForTimeout(1200);
 check('frames are drawn again', (await drawn()) > during);
 const after = await bright();
 check(`the scene is complete again (${before} → ${after} bytes)`, after > before * 0.7);
-const [x, y] = await page.evaluate(() => window.__deck.project('stylusTip'));
+const [x, y] = await page.evaluate(() => window.__deck.project('key:play'));
 check(
   'the deck still answers the pointer',
-  await page.evaluate(([a, b]) => window.__deck.stage.pick(a, b).kind === 'arm', [x, y]),
+  await page.evaluate(([a, b]) => window.__deck.stage.pick(a, b).kind === 'key:play', [x, y]),
 );
 
 // three.js reports the loss itself; that line is the event this check caused, nothing else.

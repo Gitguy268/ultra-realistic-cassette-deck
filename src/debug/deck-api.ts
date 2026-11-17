@@ -1,4 +1,4 @@
-import { Vector3 } from 'three';
+import { Box3, Vector3 } from 'three';
 import type { Deck } from '../deck';
 import type { Player } from '../player';
 import type { Stage } from '../scene/stage';
@@ -82,15 +82,25 @@ export function exposeDeck(deck: Deck, player: Player, stage: Stage | null): voi
         tapeType: deck.tapeType,
         condition: deck.condition,
         currentId: player.queue.currentId,
+        camera: stage ? stage.world.camera.position.toArray() : null,
+        inRoom: stage?.rig.insideRoom ?? null,
         queue: player.queue.ids.length,
       };
     },
-    /** A named part's centre on the page, in CSS pixels; null without the 3D stage. */
-    project: (name: string): [number, number] | null => {
+    /** A point of a named part on the page, in CSS pixels; null without the 3D stage. */
+    project: (
+      name: string,
+      at: [number, number, number] = [0.5, 0.5, 0.5],
+    ): [number, number] | null => {
       if (!stage) return null;
       const part = stage.world.deck.root.getObjectByName(name);
       if (!part) throw new Error(`no part ${name}`);
-      const [x, y] = stage.world.project(part.getWorldPosition(new Vector3()));
+      // The middle of what is drawn, not the part's origin (a door's origin is its hinge).
+      // `at` picks a point inside its box by fractions (0.5 everywhere is the middle).
+      const box = new Box3().setFromObject(part);
+      const size = box.getSize(new Vector3());
+      const point = box.min.clone().add(size.multiply(new Vector3(...at)));
+      const [x, y] = stage.world.project(point);
       const rect = stage.canvas.getBoundingClientRect();
       return [rect.left + x, rect.top + y];
     },
@@ -112,6 +122,27 @@ export function exposeDeck(deck: Deck, player: Player, stage: Stage | null): voi
         port.postMessage({ seconds });
       }),
     stats: () => stage?.world.stats() ?? null,
+    /** The label visualizer: styles on offer, the one live on a label, and its colours. */
+    Viz: {
+      modes: () =>
+        [...(document.getElementById('visualizer') as HTMLSelectElement).options]
+          .filter((o) => !o.disabled)
+          .map((o) => o.value),
+      live: () =>
+        stage?.labels.some((label) => label.isLive)
+          ? (document.getElementById('visualizer') as HTMLSelectElement).value
+          : null,
+      colours: () => {
+        const source = stage?.labels.find((label) => label.isLive)?.source;
+        const ctx = source?.getContext('2d');
+        if (!source || !ctx) return 0;
+        const data = ctx.getImageData(0, 0, source.width, source.height).data;
+        const seen = new Set<number>();
+        for (let i = 0; i < data.length; i += 4)
+          seen.add((data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!);
+        return seen.size;
+      },
+    },
   };
   Object.assign(window, { __deck: api });
 }

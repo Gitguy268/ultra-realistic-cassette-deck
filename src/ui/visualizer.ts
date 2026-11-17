@@ -13,7 +13,7 @@ const BARS_FFT_SIZE = 2048;
 const PRESET_SECONDS = 30;
 const BLEND_SECONDS = 2.7;
 
-/** A visualizer drawing into its own canvas, for the record label. */
+/** A visualizer drawing into its own canvas, for the cassette's label. */
 export interface LabelVisualizer {
   readonly canvas: HTMLCanvasElement;
   /** Draws one frame. Copy the canvas in the same task: WebGL clears it afterwards. */
@@ -131,7 +131,7 @@ export function drawBars(
   }
 }
 
-/** Listens to `source` and draws the bars into its own canvas, for the record label. */
+/** Listens to `source` and draws the bars into its own canvas, for the cassette's label. */
 export function createBarsVisualizer(ctx: AudioContext, source: AudioNode): LabelVisualizer {
   const analyser = ctx.createAnalyser();
   analyser.fftSize = BARS_FFT_SIZE;
@@ -314,7 +314,7 @@ function radial([first, last]: [number, number]): Draw {
   };
 }
 
-/** Listens to `source` and draws one of the 2D styles into its own canvas, for the record label. */
+/** Listens to `source` and draws one of the 2D styles into its own canvas, for the cassette's label. */
 export function createScopeVisualizer(
   style: ScopeStyle,
   ctx: AudioContext,

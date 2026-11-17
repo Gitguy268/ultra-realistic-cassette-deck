@@ -1,5 +1,5 @@
-// Frame time, draw calls and memory of the 3D scene with the platter turning, at the two sizes
-// the brief names: 1440 × 900 at DPR 1 and 390 × 844 at DPR 2. Uses Playwright's Chromium with
+// Frame time, draw calls and memory of the 3D scene with the tape running and the needles moving,
+// at two sizes: 1440 × 900 at DPR 1 and 390 × 844 at DPR 2. Uses Playwright's Chromium with
 // a real GPU on this Mac (Metal through ANGLE). Targets: median ≤ 16.7 ms at 1440 × 900,
 // ≤ 33.3 ms at 390 × 844 DPR 2; scene draw calls < 150; triangles < 350k; textures < 100 MB.
 // `PERF_URL` points at a running dev server or preview (default http://localhost:4195/).
@@ -45,7 +45,7 @@ for (const c of cases) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text().slice(0, 160)));
-  await page.goto(`${BASE}view.html?view=${c.view}&open=78&animate`);
+  await page.goto(`${BASE}view.html?view=${c.view}&animate`);
   await page.waitForFunction(() => window.__world?.ready, null, { timeout: 60000 });
   await page.waitForTimeout(1500); // warm-up frames
   await page.evaluate(() => (window.__world.frames.length = 0));

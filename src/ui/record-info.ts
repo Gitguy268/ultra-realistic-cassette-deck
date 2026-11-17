@@ -4,7 +4,7 @@ import { byId, formatTime, setText } from './dom';
 
 const TAG_FIELDS = ['title', 'artist', 'album', 'year', 'genre'] as const;
 
-/** The Record Info panel: the current track's details and liner notes, editable in place. */
+/** The Track info panel: the current track's details and liner notes, editable in place. */
 export function bindRecordInfo(player: Player): void {
   const fields = byId<HTMLElement>('info-fields');
   const empty = byId<HTMLElement>('info-empty');

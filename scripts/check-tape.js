@@ -106,7 +106,8 @@ await page.selectOption('#nr', 'B');
 
 // Wow and flutter: the period of a steady 1 kHz tone wanders, and holds still with it off.
 async function periodSpread() {
-  await page.waitForTimeout(1200);
+  // Long enough that the two-second capture holds nothing from before the last change.
+  await page.waitForTimeout(2600);
   return page.evaluate(async () => {
     const { samples, sr } = await window.__deck.capture(2);
     const crossings = [];

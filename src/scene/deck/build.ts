@@ -168,9 +168,12 @@ export function buildDeck(m: DeckMaterials): DeckParts {
   );
   frame.position.z = front - WELL_DEPTH;
   root.add(frame);
+  // Dark surfaces that never move, behind every opening: one mesh, one draw call.
+  const recesses: BufferGeometry[] = [];
+  const recessBox = (w: number, h: number, d: number, x: number, y: number, z: number): void => {
+    recesses.push(new BoxGeometry(w, h, d).translate(x, y, z));
+  };
   // The well: an open box behind the door.
-  const well = new Group();
-  well.name = 'well';
   const ww = W.doorWidth + mm(2);
   const wh = W.doorHeight + mm(2);
   const wall = (
@@ -182,10 +185,7 @@ export function buildDeck(m: DeckMaterials): DeckParts {
     ry: number,
     rx: number,
   ): void => {
-    const p = mesh(new PlaneGeometry(w, h), m.recess);
-    p.position.set(x, y, z);
-    p.rotation.set(rx, ry, 0);
-    well.add(p);
+    recesses.push(new PlaneGeometry(w, h).rotateX(rx).rotateY(ry).translate(x, y, z));
   };
   const wz = front - WELL_DEPTH / 2;
   wall(ww, wh, W.centreX, W.centreY, front - WELL_DEPTH + 0.0002, 0, 0);
@@ -193,7 +193,6 @@ export function buildDeck(m: DeckMaterials): DeckParts {
   wall(WELL_DEPTH, wh, W.centreX + ww / 2 - 0.0002, W.centreY, wz, -Math.PI / 2, 0);
   wall(ww, WELL_DEPTH, W.centreX, W.centreY + wh / 2 - 0.0002, wz, 0, Math.PI / 2);
   wall(ww, WELL_DEPTH, W.centreX, W.centreY - wh / 2 + 0.0002, wz, 0, -Math.PI / 2);
-  root.add(well);
 
   // Feet.
   const feet: BufferGeometry[] = [];
@@ -320,26 +319,31 @@ export function buildDeck(m: DeckMaterials): DeckParts {
   const headBlock = new Group();
   headBlock.name = 'headBlock';
   headBlock.position.set(W.centreX, W.centreY - CS.height / 2 + mm(2), front - WELL_DEPTH + mm(16));
-  const plate = mesh(new BoxGeometry(mm(70), mm(5), mm(14)), m.plastic);
-  plate.position.y = -mm(5);
-  headBlock.add(plate);
+  const blockPlastic: BufferGeometry[] = [
+    new BoxGeometry(mm(70), mm(5), mm(14)).translate(0, -mm(5), 0),
+    new BoxGeometry(mm(0.4), mm(9.2), mm(0.4)).translate(0, mm(1), mm(6.1)),
+  ];
+  const blockSteel: BufferGeometry[] = [];
+  const blockRubber: BufferGeometry[] = [];
   const head = mesh(new RoundedBoxGeometry(mm(11), mm(9), mm(8), 2, mm(2)), m.chrome, 'head');
   head.position.set(0, mm(1), mm(2));
   headBlock.add(head);
-  const gap = mesh(new BoxGeometry(mm(0.4), mm(9.2), mm(0.4)), m.recess);
-  gap.position.set(0, mm(1), mm(6.1));
-  headBlock.add(gap);
   for (const sx of [-1, 1]) {
-    const capstan = mesh(new CylinderGeometry(mm(1.2), mm(1.2), mm(14), 16), m.steel);
-    capstan.position.set(sx * mm(26), mm(2), mm(3));
-    headBlock.add(capstan);
-    const roller = mesh(new CylinderGeometry(mm(5), mm(5), mm(8), 24), m.rubber);
-    roller.position.set(sx * mm(26), mm(2), mm(-4));
-    headBlock.add(roller);
-    const guide = mesh(new CylinderGeometry(mm(2), mm(2), mm(6), 12), m.plastic);
-    guide.position.set(sx * mm(12), mm(1), mm(3));
-    headBlock.add(guide);
+    blockSteel.push(
+      new CylinderGeometry(mm(1.2), mm(1.2), mm(14), 16).translate(sx * mm(26), mm(2), mm(3)),
+    );
+    blockRubber.push(
+      new CylinderGeometry(mm(5), mm(5), mm(8), 24).translate(sx * mm(26), mm(2), -mm(4)),
+    );
+    blockPlastic.push(
+      new CylinderGeometry(mm(2), mm(2), mm(6), 12).translate(sx * mm(12), mm(1), mm(3)),
+    );
   }
+  headBlock.add(
+    mesh(mergeGeometries(blockPlastic), m.plastic, 'headPlate'),
+    mesh(mergeGeometries(blockSteel), m.steel, 'capstans'),
+    mesh(mergeGeometries(blockRubber), m.rubber, 'rollers'),
+  );
   root.add(headBlock);
 
   // ─── Keys ────────────────────────────────────────────────────────
@@ -368,9 +372,7 @@ export function buildDeck(m: DeckMaterials): DeckParts {
     keys[name] = key;
   });
   // The slot behind the keys.
-  const slot = mesh(new BoxGeometry(keyRowWidth + mm(3), K.height + mm(2.5), mm(2)), m.recess);
-  slot.position.set(W.centreX, K.centreY, front - mm(1));
-  root.add(slot);
+  recessBox(keyRowWidth + mm(3), K.height + mm(2.5), mm(2), W.centreX, K.centreY, front - mm(1));
 
   // ─── Power, phones, LEDs ─────────────────────────────────────────
   const power = mesh(new RoundedBoxGeometry(PW.width, PW.height, mm(12), 2, mm(1)), m.key, 'power');
@@ -383,13 +385,11 @@ export function buildDeck(m: DeckMaterials): DeckParts {
   );
   jackRing.position.set(PW.jackX, PW.jackY, FACE_Z + mm(0.3));
   root.add(jackRing);
-  const jackHole = mesh(
-    new CylinderGeometry(PW.jackDiameter / 2, PW.jackDiameter / 2, mm(4), 24),
-    m.recess,
+  recesses.push(
+    new CylinderGeometry(PW.jackDiameter / 2, PW.jackDiameter / 2, mm(4), 24)
+      .rotateX(Math.PI / 2)
+      .translate(PW.jackX, PW.jackY, FACE_Z - mm(1.5)),
   );
-  jackHole.rotation.x = Math.PI / 2;
-  jackHole.position.set(PW.jackX, PW.jackY, FACE_Z - mm(1.5));
-  root.add(jackHole);
   const ledMesh = (material: Material, x: number, y: number, name: string): Mesh => {
     const g = new SphereGeometry(LED.diameter / 2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
     g.rotateX(Math.PI / 2);
@@ -444,16 +444,13 @@ export function buildDeck(m: DeckMaterials): DeckParts {
     meterGroup.add(needle);
     return needle;
   }) as [Group, Group];
-  const meterGlass = mesh(new PlaneGeometry(MT.width, MT.height), m.glass, 'meterGlass');
-  meterGlass.position.set(MT.centreX, MT.centreY, FACE_Z - mm(1.2));
-  meterGlass.castShadow = false;
-  meterGroup.add(meterGlass);
+  const glasses: BufferGeometry[] = [
+    new PlaneGeometry(MT.width, MT.height).translate(MT.centreX, MT.centreY, FACE_Z - mm(1.2)),
+  ];
   root.add(meterGroup);
 
   // ─── Counter ─────────────────────────────────────────────────────
-  const counterBack = mesh(new BoxGeometry(CT.windowWidth, CT.windowHeight, mm(1)), m.recess);
-  counterBack.position.set(CT.x, CT.y, FACE_Z - mm(9));
-  root.add(counterBack);
+  recessBox(CT.windowWidth, CT.windowHeight, mm(1), CT.x, CT.y, FACE_Z - mm(9));
   const wheels = [0, 1, 2].map((i) => {
     const g = new CylinderGeometry(
       CT.wheelDiameter / 2,
@@ -474,9 +471,9 @@ export function buildDeck(m: DeckMaterials): DeckParts {
     root.add(w);
     return w;
   }) as [Mesh, Mesh, Mesh];
-  const counterGlass = mesh(new PlaneGeometry(CT.windowWidth, CT.windowHeight), m.glass);
-  counterGlass.position.set(CT.x, CT.y, FACE_Z - mm(1));
-  root.add(counterGlass);
+  glasses.push(
+    new PlaneGeometry(CT.windowWidth, CT.windowHeight).translate(CT.x, CT.y, FACE_Z - mm(1)),
+  );
   const reset = mesh(new CylinderGeometry(mm(2.6), mm(2.6), mm(6), 24), m.plastic, 'counterReset');
   reset.rotation.x = Math.PI / 2;
   reset.position.set(CT.resetX, CT.y, FACE_Z - mm(1.5));
@@ -485,12 +482,14 @@ export function buildDeck(m: DeckMaterials): DeckParts {
   // ─── Switches ────────────────────────────────────────────────────
   const switches = {} as Record<SwitchName, Mesh>;
   for (const name of SWITCH_NAMES) {
-    const slotBack = mesh(
-      new BoxGeometry(2 * SW.travel + SW.knobWidth + mm(1.5), mm(3.6), mm(1)),
-      m.recess,
+    recessBox(
+      2 * SW.travel + SW.knobWidth + mm(1.5),
+      mm(3.6),
+      mm(1),
+      switchX[name],
+      SW.y,
+      FACE_Z - mm(5),
     );
-    slotBack.position.set(switchX[name], SW.y, FACE_Z - mm(5));
-    root.add(slotBack);
     const knob = mesh(
       new RoundedBoxGeometry(SW.knobWidth, SW.knobHeight, mm(9), 2, mm(0.8)),
       m.key,
@@ -501,6 +500,10 @@ export function buildDeck(m: DeckMaterials): DeckParts {
     root.add(knob);
     switches[name] = knob;
   }
+
+  const glass = mesh(mergeGeometries(glasses), m.glass, 'glass');
+  glass.castShadow = false;
+  root.add(glass, mesh(mergeGeometries(recesses), m.recess, 'recesses'));
 
   // ─── Level knob ──────────────────────────────────────────────────
   const levelKnob = new Group();

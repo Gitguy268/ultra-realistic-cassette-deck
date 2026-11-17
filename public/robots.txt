@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gitguy268-ultra-realistic-cassette-deck.vercel.app/sitemap.xml

@@ -1,0 +1,51 @@
+# Ultra-Realistic Cassette Deck
+
+> A browser cassette deck simulator. You load your own audio files; they are laid
+> onto a cassette as a mixtape and played on a 3D model of a generic 1980s
+> silver front-loading deck. It is a static web page with no server, no account
+> and no tracking; audio never leaves the device.
+
+URL: https://gitguy268-ultra-realistic-cassette-deck.vercel.app/
+Source: https://github.com/Gitguy268/ultra-realistic-cassette-deck
+License: MIT
+
+## What it does
+
+- Lays the queue onto C46, C60, C90 or C120 cassettes: side A, then side B, with
+  gaps between tracks, and further cassettes when one is full.
+- Models the tape transport: a capstan at 4.76 cm/s with a pitch control of plus
+  or minus 3 percent, fast wind that speeds up as the take-up pack grows, a
+  mechanical counter that counts reel turns, clear leader at both ends, and
+  auto-reverse (one side, both sides, or endless).
+- Cue and review: holding fast forward or rewind during play runs the tape at
+  seven times speed with the head on it. Music search winds to the gap before
+  the next or previous track.
+- Plays through a tape chain in an AudioWorklet: noise reduction modelled as a
+  sliding-band compander (B, or C in two stages), tape hiss by tape type,
+  playback equalisation at 120 or 70 microseconds (a mismatch is heard), head
+  bump, treble saturation, dropouts at fixed places on the tape, azimuth error on
+  the reverse side, and wow and flutter.
+- Draws the deck in WebGL: piano keys, a damped door, the cassette with its
+  reels turning and its packs growing and shrinking, needle VU meters, the
+  counter, slide switches and an output knob. A 2D deck stands in without WebGL.
+- Keeps a library and a queue in IndexedDB, with tags, cover art, shuffle and
+  repeat. Has a Winamp-style ten-band graphic EQ and a visualizer on the
+  cassette's label.
+- Works offline after the first visit and can be installed as an app.
+
+## What it does not do
+
+- It does not record. It does not stream music from any service and ships with
+  no audio. It does not upload, analyse or share files.
+- It is not a measurement-grade emulation. The noise reduction is modelled from
+  published descriptions, not from any licensed circuit, and the deck is not a
+  copy of any real model. It is not affiliated with any maker.
+
+## Controls
+
+Space plays or pauses; X stops (press again to eject). [ and ] rewind and fast
+forward, and cue or review while held during play. B and N search for the
+previous or next track. V reverses, E ejects, P switches the power, 0 resets the
+counter. Left and right arrows jump five seconds; up and down change the level.
+S toggles shuffle, R cycles repeat, F toggles focus mode, and ? lists every
+shortcut.

@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "chassis": {
+    "width": 0.43,
+    "height": 0.118,
+    "depth": 0.262,
+    "footHeight": 0.01,
+    "footDiameter": 0.036,
+    "footInsetX": 0.036,
+    "footInsetZ": 0.032,
+    "wrapThickness": 0.0012,
+    "edgeRadius": 0.0016,
+    "ventSlots": 22
+  },
+  "face": {
+    "thickness": 0.005,
+    "bevel": 0.0012,
+    "inset": 0
+  },
+  "well": {
+    "centreX": -0.092,
+    "centreY": 0.07,
+    "doorWidth": 0.14,
+    "doorHeight": 0.08,
+    "doorThickness": 0.009,
+    "windowWidth": 0.112,
+    "windowHeight": 0.054,
+    "windowOffsetY": 0.003,
+    "openDeg": 28,
+    "openS": 0.65,
+    "closeS": 0.18,
+    "cassetteDepth": 0.014
+  },
+  "keys": {
+    "order": [
+      "rec",
+      "rew",
+      "play",
+      "ff",
+      "stop",
+      "pause"
+    ],
+    "centreY": 0.019,
+    "width": 0.0205,
+    "height": 0.012,
+    "gap": 0.002,
+    "depth": 0.022,
+    "travel": 0.004,
+    "latchTravel": 0.0026,
+    "pressS": 0.05,
+    "releaseS": 0.09
+  },
+  "power": {
+    "x": -0.196,
+    "y": 0.08,
+    "width": 0.016,
+    "height": 0.01,
+    "travel": 0.003,
+    "jackX": -0.196,
+    "jackY": 0.03,
+    "jackDiameter": 0.00635
+  },
+  "meters": {
+    "centreX": 0.078,
+    "centreY": 0.088,
+    "width": 0.124,
+    "height": 0.038,
+    "faceWidth": 0.056,
+    "needleLength": 0.03,
+    "sweepDeg": 92,
+    "riseS": 0.3,
+    "overshoot": 0.012,
+    "lampKelvin": 3000
+  },
+  "counter": {
+    "x": 0.174,
+    "y": 0.092,
+    "wheelDiameter": 0.009,
+    "wheelWidth": 0.0052,
+    "windowWidth": 0.022,
+    "windowHeight": 0.01,
+    "resetX": 0.196,
+    "turnsPerCount": 1.4
+  },
+  "switches": {
+    "y": 0.054,
+    "tapeTypeX": 0.042,
+    "nrX": 0.092,
+    "reverseX": 0.142,
+    "width": 0.03,
+    "knobWidth": 0.007,
+    "knobHeight": 0.006,
+    "travel": 0.009
+  },
+  "levelKnob": {
+    "x": 0.186,
+    "y": 0.048,
+    "diameter": 0.024,
+    "depth": 0.014,
+    "sweepDeg": 270,
+    "knurls": 60
+  },
+  "leds": {
+    "y": 0.022,
+    "reverseX": -0.008,
+    "forwardX": 0.004,
+    "powerY": 0.096,
+    "diameter": 0.003
+  },
+  "cassette": {
+    "width": 0.1016,
+    "height": 0.0635,
+    "thickness": 0.0127,
+    "hubSpacing": 0.042,
+    "hubRadius": 0.011,
+    "windowWidth": 0.064,
+    "windowHeight": 0.022,
+    "labelHeight": 0.03,
+    "tapeWidth": 0.00381,
+    "leaderLength": 0.24
+  },
+  "tapes": {
+    "C46": {
+      "minutes": 46,
+      "length": 69,
+      "thickness": 0.0000155
+    },
+    "C60": {
+      "minutes": 60,
+      "length": 90,
+      "thickness": 0.0000155
+    },
+    "C90": {
+      "minutes": 90,
+      "length": 135,
+      "thickness": 0.000010500000000000001
+    },
+    "C120": {
+      "minutes": 120,
+      "length": 172,
+      "thickness": 0.000006
+    }
+  },
+  "transport": {
+    "speed": 0.047625,
+    "pitchPercent": 3,
+    "startTau": 0.06,
+    "stopTau": 0.03,
+    "runDownTau": 0.45,
+    "windRadPerS": 75,
+    "windTau": 0.35,
+    "brakeTau": 0.12,
+    "engageS": 0.12,
+    "reverseS": 0.42,
+    "searchGapS": 3,
+    "gapS": 4,
+    "leadS": 2
+  },
+  "tapeTypes": {
+    "I": {
+      "label": "Type I · Normal",
+      "eqUs": 120,
+      "hissDb": -58,
+      "hfSaturation": 0.55,
+      "mol": 0.9
+    },
+    "II": {
+      "label": "Type II · CrO₂",
+      "eqUs": 70,
+      "hissDb": -62,
+      "hfSaturation": 0.75,
+      "mol": 1
+    },
+    "IV": {
+      "label": "Type IV · Metal",
+      "eqUs": 70,
+      "hissDb": -63,
+      "hfSaturation": 1,
+      "mol": 1.25
+    }
+  },
+  "nr": {
+    "B": {
+      "stages": 1,
+      "maxDb": 10,
+      "cornerHz": 1500
+    },
+    "C": {
+      "stages": 2,
+      "maxDb": 10,
+      "cornerHz": 600
+    }
+  },
+  "wowFlutter": {
+    "wowHz": 1.1,
+    "wowDepth": 0.0006,
+    "flutterHz": 9.5,
+    "flutterDepth": 0.00035
+  },
+  "azimuth": {
+    "reverseUs": 14,
+    "forwardUs": 2
+  },
+  "materials": {
+    "brushedSilver": {
+      "colour": "#cfd0d2",
+      "roughness": 0.3,
+      "metalness": 1,
+      "anisotropy": 0.85
+    },
+    "brushedBlack": {
+      "colour": "#26272a",
+      "roughness": 0.34,
+      "metalness": 0.9,
+      "anisotropy": 0.8
+    },
+    "brushedChampagne": {
+      "colour": "#d8c7a6",
+      "roughness": 0.3,
+      "metalness": 1,
+      "anisotropy": 0.85
+    },
+    "wrapBlack": {
+      "colour": "#1c1c1e",
+      "roughness": 0.55,
+      "metalness": 0.3
+    },
+    "wrapWalnut": {
+      "colour": "#5a3a22",
+      "roughness": 0.55,
+      "metalness": 0
+    },
+    "keyCap": {
+      "colour": "#d9dadb",
+      "roughness": 0.24,
+      "metalness": 1,
+      "anisotropy": 0.5
+    },
+    "keyCapBlack": {
+      "colour": "#1d1d1f",
+      "roughness": 0.32,
+      "metalness": 0.6
+    },
+    "smokedAcrylic": {
+      "colour": "#3a3430",
+      "roughness": 0.05,
+      "metalness": 0,
+      "transmission": 0.82
+    },
+    "meterFace": {
+      "colour": "#efe6cc",
+      "roughness": 0.7,
+      "metalness": 0
+    },
+    "needle": {
+      "colour": "#c4221a",
+      "roughness": 0.5,
+      "metalness": 0
+    },
+    "shellBlack": {
+      "colour": "#141416",
+      "roughness": 0.42,
+      "metalness": 0
+    },
+    "shellClear": {
+      "colour": "#e8ecef",
+      "roughness": 0.08,
+      "metalness": 0,
+      "transmission": 0.88
+    },
+    "tape": {
+      "colour": "#3b2618",
+      "roughness": 0.38,
+      "metalness": 0.1
+    },
+    "leader": {
+      "colour": "#e9e5dc",
+      "roughness": 0.5,
+      "metalness": 0
+    },
+    "hub": {
+      "colour": "#f1f0ec",
+      "roughness": 0.5,
+      "metalness": 0
+    },
+    "labelPaper": {
+      "colour": "#f2ead8",
+      "roughness": 0.88,
+      "metalness": 0
+    },
+    "rubber": {
+      "colour": "#121212",
+      "roughness": 0.86,
+      "metalness": 0
+    },
+    "steel": {
+      "colour": "#d8d9da",
+      "roughness": 0.12,
+      "metalness": 1
+    },
+    "chrome": {
+      "colour": "#e9eaeb",
+      "roughness": 0.06,
+      "metalness": 1
+    },
+    "silkscreen": {
+      "colour": "#1a1a1a"
+    },
+    "credenzaWalnut": {
+      "colour": "#4a2e1a",
+      "roughness": 0.45,
+      "metalness": 0,
+      "clearcoat": 0.35
+    },
+    "wallPaint": {
+      "colour": "#b9a58a",
+      "roughness": 0.92,
+      "metalness": 0
+    }
+  },
+  "finishes": {
+    "silver": {
+      "face": "brushedSilver",
+      "wrap": "wrapBlack",
+      "keys": "keyCap",
+      "label": "Silver"
+    },
+    "black": {
+      "face": "brushedBlack",
+      "wrap": "wrapBlack",
+      "keys": "keyCapBlack",
+      "label": "Black"
+    },
+    "champagne": {
+      "face": "brushedChampagne",
+      "wrap": "wrapBlack",
+      "keys": "keyCap",
+      "label": "Champagne"
+    },
+    "walnut": {
+      "face": "brushedSilver",
+      "wrap": "wrapWalnut",
+      "keys": "keyCap",
+      "label": "Silver on walnut"
+    }
+  },
+  "themes": {
+    "minimal": "black",
+    "wood": "walnut",
+    "clear": "silver"
+  },
+  "room": {
+    "credenza": {
+      "width": 1.6,
+      "depth": 0.5,
+      "height": 0.66,
+      "top": 0.025,
+      "centreX": 0.12,
+      "frontZ": 0.2
+    },
+    "wallZ": -0.32,
+    "bounds": {
+      "left": -1.45,
+      "right": 2.1,
+      "front": 3.2,
+      "ceiling": 1.95
+    },
+    "window": {
+      "z": 0.45,
+      "y": 0.75,
+      "width": 1.1,
+      "height": 1.25
+    },
+    "lamp": {
+      "x": 0.66,
+      "z": -0.14,
+      "shadeY": 0.42,
+      "shadeRadius": 0.13,
+      "kelvin": 2700
+    },
+    "bounce": 0.3,
+    "lighting": {
+      "dusk": {
+        "exposureEV": 6.4,
+        "windowKelvin": 7400,
+        "windowLux": 190,
+        "lampLumens": 520,
+        "wall": "#a69e92"
+      },
+      "daylight": {
+        "exposureEV": 9.6,
+        "windowKelvin": 6300,
+        "windowLux": 1400,
+        "lampLumens": 0,
+        "wall": "#c4b49c"
+      }
+    }
+  },
+  "camera": {
+    "filmGauge": 36,
+    "hero": {
+      "focal": 40,
+      "position": [
+        -0.3,
+        0.3,
+        0.86
+      ],
+      "target": [
+        0,
+        0.06,
+        0.06
+      ]
+    },
+    "control": {
+      "focal": 45,
+      "position": [
+        0,
+        0.18,
+        0.72
+      ],
+      "target": [
+        0,
+        0.065,
+        0.13
+      ]
+    },
+    "mobile": {
+      "focal": 35,
+      "position": [
+        0,
+        0.42,
+        1.2
+      ],
+      "target": [
+        0,
+        0.06,
+        0.06
+      ]
+    },
+    "intro": {
+      "durationS": 7,
+      "keyframes": [
+        {
+          "t": 0,
+          "focal": 35,
+          "position": [
+            -1.15,
+            1.1,
+            2.2
+          ],
+          "target": [
+            -0.6,
+            0.7,
+            -0.3
+          ]
+        },
+        {
+          "t": 0.45,
+          "focal": 38,
+          "position": [
+            -0.8,
+            0.55,
+            1.4
+          ],
+          "target": [
+            -0.05,
+            0.08,
+            0
+          ]
+        },
+        {
+          "t": 1,
+          "focal": 40,
+          "position": [
+            -0.3,
+            0.3,
+            0.86
+          ],
+          "target": [
+            0,
+            0.06,
+            0.06
+          ]
+        }
+      ]
+    },
+    "tour": [
+      {
+        "name": "Cassette and reels",
+        "focal": 55,
+        "position": [
+          -0.16,
+          0.12,
+          0.42
+        ],
+        "target": [
+          -0.092,
+          0.072,
+          0.13
+        ],
+        "dof": true
+      },
+      {
+        "name": "Meters and counter",
+        "focal": 55,
+        "position": [
+          0.18,
+          0.13,
+          0.44
+        ],
+        "target": [
+          0.11,
+          0.085,
+          0.13
+        ],
+        "dof": true
+      },
+      {
+        "name": "Transport keys",
+        "focal": 55,
+        "position": [
+          -0.04,
+          0.09,
+          0.4
+        ],
+        "target": [
+          -0.09,
+          0.02,
+          0.13
+        ],
+        "dof": true
+      },
+      {
+        "name": "Switches and level",
+        "focal": 50,
+        "position": [
+          0.34,
+          0.16,
+          0.38
+        ],
+        "target": [
+          0.12,
+          0.05,
+          0.13
+        ],
+        "dof": true
+      }
+    ],
+    "limits": {
+      "minDistance": 0.24,
+      "maxDistance": 2.4,
+      "minPolarDeg": 8,
+      "maxPolarDeg": 86
+    }
+  }
+}
